@@ -13,7 +13,7 @@ Python bindings for the ET Tools Runtime Library (etrt/IRuntime).
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.8+
 - CMake 3.15+
 - ET platform (runtime and dependencies) installed to `/opt/et` or custom location via `ET_PLATFORM` environment variable
 - nanobind (automatically installed via pip)

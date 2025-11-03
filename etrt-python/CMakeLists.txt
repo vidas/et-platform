@@ -27,18 +27,19 @@ find_package(runtime REQUIRED)
 find_package(deviceLayer REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
-# Try to import all Python components for nanobind
+# Fetch nanobind during build if not already available
+include(FetchContent)
 if(NOT TARGET nanobind::nanobind)
-  execute_process(
-    COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-    OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NB_DIR
-    RESULT_VARIABLE NB_RESULT)
-  if(NB_RESULT EQUAL 0)
-    list(APPEND CMAKE_PREFIX_PATH "${NB_DIR}")
-    find_package(nanobind CONFIG REQUIRED)
-  else()
-    message(FATAL_ERROR "nanobind not found. Install with: pip install nanobind")
-  endif()
+  message(STATUS "Fetching nanobind from GitHub...")
+  FetchContent_Declare(
+    nanobind
+    GIT_REPOSITORY https://github.com/wjakob/nanobind.git
+    GIT_TAG v2.4.0
+    GIT_SHALLOW TRUE
+  )
+
+  FetchContent_MakeAvailable(nanobind)
+  message(STATUS "nanobind fetched successfully")
 endif()
 
 # Create the Python extension module
