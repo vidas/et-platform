@@ -62,6 +62,8 @@ RUN apt-get update && apt-get install -y \
     python3-sphinx-rtd-theme \
     python3-breathe \
     python3-jsonschema \
+    python3-numpy \
+    python3-pytest \
     libfmt-dev \
     xxd \
     && rm -rf /var/lib/apt/lists/*
