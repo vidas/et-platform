@@ -2,6 +2,9 @@
 
 Python bindings for the ET Tools Runtime Library (etrt/IRuntime).
 
+> [!WARNING]
+> The code is alpha quality, interfaces will almost certainly change.
+
 ## Overview
 
 `etrt-python` provides Python bindings for the ET RISC-V accelerator runtime library, enabling:
