@@ -122,11 +122,8 @@ if (SDK_RELEASE AND NOT BUILD_SHARED_LIBS)
     set(BUILD_SHARED_LIBS ON)
 endif()
 
-
-add_library(sw-sysemu)
-add_library(sw-sysemu::sw-sysemu ALIAS sw-sysemu)
-target_sources(sw-sysemu PRIVATE
-    # Core sysemu files
+# Core sysemu files
+set(CORE_SYSEMU_SOURCES
     sys_emu/checkers/flb_checker.cpp
     sys_emu/checkers/l1_scp_checker.cpp
     sys_emu/checkers/l2_scp_checker.cpp
@@ -142,8 +139,6 @@ target_sources(sw-sysemu PRIVATE
     sys_emu/log.cpp
     agent.cpp
     debugmodule.cpp
-    devices/pcie_dma.cpp
-    devices/spio_misc_region.cpp
     emu_gio.cpp
     esrs.cpp
     flb.cpp
@@ -181,6 +176,9 @@ target_sources(sw-sysemu PRIVATE
     $<$<BOOL:${PROFILING}>:sys_emu/profiling.cpp>
     $<$<BOOL:${BACKTRACE}>:sys_emu/crash_handler.cpp>
     ${AUTOGEN_SRCS}
+)
+
+set(SOFTFLOAT_SOURCES
     # Softfloat emulation
     fpu/cvt.cpp
     fpu/f10_to_f32.cpp
@@ -417,6 +415,16 @@ target_sources(sw-sysemu PRIVATE
     softfloat/ui64_to_f16.c
     softfloat/ui64_to_f32.c
     softfloat/ui64_to_f64.c
+)
+
+add_library(sw-sysemu)
+add_library(sw-sysemu::sw-sysemu ALIAS sw-sysemu)
+target_sources(sw-sysemu PRIVATE
+    ${CORE_SYSEMU_SOURCES}
+    ${SOFTFLOAT_SOURCES}
+    # Devices
+    devices/pcie_dma.cpp
+    devices/spio_misc_region.cpp
     # SW wrapper
     sw-sysemu/SysEmuImp.cpp
     sw-sysemu/SysEmuImp.h
