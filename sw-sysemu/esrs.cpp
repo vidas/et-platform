@@ -1348,7 +1348,7 @@ void System::write_minion_feature(unsigned shire, uint8_t value)
 
 void System::write_icache_prefetch(Privilege /*privilege*/, unsigned shire, uint64_t value)
 {
-    assert(shire <= EMU_MASTER_SHIRE);
+    assert(shire <= EMU_NUM_COMPUTE_SHIRES);
 #ifdef SYS_EMU
     (void)(shire);
     (void)(value);
@@ -1364,7 +1364,7 @@ void System::write_icache_prefetch(Privilege /*privilege*/, unsigned shire, uint
 uint64_t System::read_icache_prefetch(Privilege /*privilege*/, unsigned shire) const
 {
     (void) shire;
-    assert(shire <= EMU_MASTER_SHIRE);
+    assert(shire <= EMU_NUM_COMPUTE_SHIRES);
 #ifdef SYS_EMU
     // NB: Prefetches finish instantaneously in sys_emu
     return 1;
@@ -1377,7 +1377,7 @@ uint64_t System::read_icache_prefetch(Privilege /*privilege*/, unsigned shire) c
 void System::finish_icache_prefetch(unsigned shire)
 {
     (void) shire;
-    assert(shire <= EMU_MASTER_SHIRE);
+    assert(shire <= EMU_NUM_COMPUTE_SHIRES);
 #ifndef SYS_EMU
     shire_other_esrs[shire].icache_prefetch_active = 0;
 #endif

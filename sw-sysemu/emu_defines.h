@@ -17,7 +17,6 @@ namespace bemu {
 #define NUM_MEM_SHIRES          8
 #define EMU_NUM_MINION_SHIRES   (EMU_NUM_SHIRES - 1)
 #define EMU_NUM_COMPUTE_SHIRES  (EMU_NUM_MINION_SHIRES - 2)
-#define EMU_MASTER_SHIRE        (EMU_NUM_MINION_SHIRES - 2)
 #define EMU_SPARE_SHIRE         (EMU_NUM_MINION_SHIRES - 1)
 #define EMU_IO_SHIRE_SP         (EMU_NUM_SHIRES - 1)
 #define EMU_MEM_SHIRE_BASE_ID   232
