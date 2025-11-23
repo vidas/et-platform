@@ -278,6 +278,7 @@ uint16_t System::calculate_andortree1(unsigned shire) const
 }
 
 
+#if EMU_HAS_SVCPROC
 //==------------------------------------------------------------------------==//
 //
 // Service processor debug module
@@ -357,5 +358,6 @@ uint32_t System::read_sphastatus() const
     return sphastatus & 0x7f;
 }
 
+#endif // EMU_HAS_SVCPROC
 
 } // namespace bemu

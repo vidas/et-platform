@@ -17,6 +17,7 @@
 #include <vector>
 #include <fstream>
 
+#include "emu_defines.h"
 #include "api_communicate.h"
 #include "system.h"
 #include "checkers/flb_checker.h"

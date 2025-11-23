@@ -715,7 +715,7 @@ tload_exit:
     }
 }
 
-
+#if EMU_HAS_L2
 // ----- TensorLoadL2Scp emulation --------------------------------------------------
 
 void tensor_load_l2_start(Hart& cpu, uint64_t control)
@@ -762,6 +762,7 @@ void tensor_load_l2_start(Hart& cpu, uint64_t control)
         cpu.stop_waiting(Hart::Waiting::tload_L2_1);
     }
 }
+#endif // EMU_HAS_L2
 
 
 // ----- TensorQuant emulation -------------------------------------------------

@@ -211,6 +211,7 @@ static inline uint64_t truncated_dram_addr(const Hart& cpu, uint64_t addr)
 // Convert between the two Minion L2SCP views to the NoC view
 static inline uint64_t normalize_scratchpad_address(const Hart& cpu, uint64_t addr)
 {
+#if EMU_HAS_L2
     // Convert between format 0 and format 1 to internal format
     addr -= L2_SCP_BASE;
     if (addr >= 1_GiB) {
@@ -230,6 +231,10 @@ static inline uint64_t normalize_scratchpad_address(const Hart& cpu, uint64_t ad
         addr = (addr & ~(255ull << 23)) | (shire << 23);
     }
     return addr;
+#else
+    (void)cpu;
+    return addr;
+#endif
 }
 
 

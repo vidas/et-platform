@@ -406,8 +406,12 @@ sys_emu::sys_emu(const sys_emu_cmd_options &cmd_options, api_communicate *api_co
         chip.cold_reset(shire);
     }
     chip.cold_reset_mindm();
+#if EMU_HAS_SVCPROC
     chip.cold_reset_spdm();
+#endif
+#if EMU_HAS_MEMSHIRE
     chip.cold_reset_memshire();
+#endif
 
     // Configure the simulation parameters
     for (unsigned shire = 0; shire < EMU_NUM_MINION_SHIRES; ++shire) {
@@ -423,6 +427,7 @@ sys_emu::sys_emu(const sys_emu_cmd_options &cmd_options, api_communicate *api_co
                                     cmd_options.second_thread,
                                     !cmd_options.mins_dis);
     }
+#if EMU_HAS_SVCPROC
     if (((cmd_options.shires_en >> EMU_IO_SHIRE_SP) & 1) == 0)  {
         chip.config_simulated_harts(EMU_IO_SHIRE_SP, 0, false, false);
     } else {
@@ -430,6 +435,7 @@ sys_emu::sys_emu(const sys_emu_cmd_options &cmd_options, api_communicate *api_co
         chip.config_simulated_harts(EMU_IO_SHIRE_SP, cmd_options.minions_en,
                                     false, !cmd_options.sp_dis);
     }
+#endif
 
     // Reset the warm-reset part of the system
     for (unsigned shire = 0; shire < EMU_NUM_SHIRES; ++shire) {

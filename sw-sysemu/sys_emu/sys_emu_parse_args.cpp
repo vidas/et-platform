@@ -370,7 +370,11 @@ sys_emu::parse_command_line_arguments(int argc, char* argv[])
             }
 
             if (!strcmp(tokens[0], "sp")) {
+#if EMU_HAS_SVCPROC
                 thread = EMU_IO_SHIRE_SP_THREAD;
+#else
+                SE_ERROR("Command line option '-set_xreg': No Service Processor");
+#endif
             } else {
                 thread = bemu::hartindex(atoi(tokens[0]));
             }

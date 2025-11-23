@@ -185,13 +185,14 @@ void shire_other_esrs_t::cold_reset(unsigned shire)
     uc_config = false;
 }
 
-
+#if EMU_HAS_MEMSHIRE
 void mem_shire_esrs_t::cold_reset()
 {
     status = 0x1;
     int_en = 0;
     perf_ctrl_status = 0;
 }
+#endif
 
 
 uint64_t System::esr_read(const Agent& agent, uint64_t addr)
@@ -211,6 +212,7 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
         break;
     }
 
+#if EMU_HAS_PU
     // addr[21] == 0 means accessing the R_PU_RVTim ESRs
     if (shireindex_is_ioshire(shire) && (~addr2 & 0x200000ULL)) {
         uint64_t esr = addr2 & ESR_IOSHIRE_ESR_MASK;
@@ -231,7 +233,9 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
         WARN_AGENT(esrs, agent, "Read unknown R_PU_RVTim ESR 0x%" PRIx64, esr);
         throw memory_error(addr);
     }
+#endif
 
+#if EMU_HAS_MEMSHIRE
     if ((shire >= EMU_NUM_SHIRES) && !((shire >= EMU_MEM_SHIRE_BASE_ID) && (shire < (EMU_MEM_SHIRE_BASE_ID + NUM_MEM_SHIRES)))) {
         WARN_AGENT(esrs, agent, "Read illegal ESR S%u:0x%llx", shireid(shire), addr2 & ~ESR_REGION_SHIRE_MASK);
         throw memory_error(addr);
@@ -291,6 +295,7 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
             throw memory_error(addr);
         }
     }
+#endif // EMU_HAS_MEMSHIRE
 
     uint64_t sregion = addr2 & ESR_SREGION_MASK;
 
@@ -621,6 +626,7 @@ void System::esr_write(const Agent& agent, uint64_t addr, uint64_t value)
         }
     }
 
+#if EMU_HAS_PU
     // addr[21] == 0 means accessing the R_PU_RVTim ESRs
     if (shireindex_is_ioshire(shire) && (~addr2 & 0x200000ULL)) {
         uint64_t esr = addr2 & ESR_IOSHIRE_ESR_MASK;
@@ -643,7 +649,9 @@ void System::esr_write(const Agent& agent, uint64_t addr, uint64_t value)
         WARN_AGENT(esrs, agent, "Write unknown R_PU_RVTim ESR 0x%" PRIx64, esr);
         throw memory_error(addr);
     }
+#endif // EMU_HAS_PU
 
+#if EMU_HAS_MEMSHIRE
     if ((shire >= EMU_NUM_SHIRES) && !((shire >= EMU_MEM_SHIRE_BASE_ID) && (shire < (EMU_MEM_SHIRE_BASE_ID + NUM_MEM_SHIRES)))) {
         WARN_AGENT(esrs, agent, "Write illegal ESR S%u:0x%llx", shireid(shire), addr2 & ~ESR_REGION_SHIRE_MASK);
         throw memory_error(addr);
@@ -712,6 +720,7 @@ void System::esr_write(const Agent& agent, uint64_t addr, uint64_t value)
         }
         return;
     }
+#endif // EMU_HAS_MEMSHIRE
 
     uint64_t sregion = addr2 & ESR_SREGION_MASK;
 

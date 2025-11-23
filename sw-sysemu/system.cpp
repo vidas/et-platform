@@ -128,16 +128,21 @@ void System::cold_reset_mindm()
 }
 
 
+#if EMU_HAS_SVCPROC
 void System::cold_reset_spdm()
 {
     debug_reset(EMU_IO_SHIRE_SP);
     spdmctrl = 0;
 }
+#endif // EMU_HAS_SVCPROC
 
+#if EMU_HAS_MEMSHIRE
 void System::cold_reset_memshire()
 {
     mem_shire_esrs.cold_reset();
 }
+#endif // EMU_HAS_MEMSHIRE
+
 
 void System::raise_machine_timer_interrupt(unsigned shire)
 {

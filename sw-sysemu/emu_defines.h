@@ -11,15 +11,11 @@
 
 namespace bemu {
 
-
 // Maximum number of threads
 #define EMU_NUM_SHIRES          35
-#define NUM_MEM_SHIRES          8
 #define EMU_NUM_MINION_SHIRES   (EMU_NUM_SHIRES - 1)
 #define EMU_NUM_COMPUTE_SHIRES  (EMU_NUM_MINION_SHIRES - 2)
 #define EMU_SPARE_SHIRE         (EMU_NUM_MINION_SHIRES - 1)
-#define EMU_IO_SHIRE_SP         (EMU_NUM_SHIRES - 1)
-#define EMU_MEM_SHIRE_BASE_ID   232
 #define EMU_THREADS_PER_MINION  2
 #define EMU_MINIONS_PER_NEIGH   8
 #define EMU_THREADS_PER_NEIGH   (EMU_THREADS_PER_MINION * EMU_MINIONS_PER_NEIGH)
@@ -29,10 +25,60 @@ namespace bemu {
 #define EMU_NUM_NEIGHS          ((EMU_NUM_MINION_SHIRES * EMU_NEIGH_PER_SHIRE) + 1)
 #define EMU_NUM_MINIONS         ((EMU_NUM_MINION_SHIRES * EMU_MINIONS_PER_SHIRE) + 1)
 #define EMU_NUM_THREADS         ((EMU_NUM_MINION_SHIRES * EMU_THREADS_PER_SHIRE) + 1)
+
+//
+// IO-Shire (and Service Processor) Configuration.
+//
+#define EMU_HAS_SVCPROC 1
+#define EMU_HAS_SPIO 1
+#define EMU_HAS_PU 1
+
+#define EMU_IO_SHIRE_SP         (EMU_NUM_SHIRES - 1)
 #define EMU_IO_SHIRE_SP_THREAD  (EMU_NUM_THREADS - 1)
 #define EMU_IO_SHIRE_SP_NEIGH   (EMU_NUM_NEIGHS - 1)
 #define IO_SHIRE_ID             254
 #define IO_SHIRE_SP_HARTID      (IO_SHIRE_ID * EMU_THREADS_PER_SHIRE)
+// IO region
+#define IO_REGION_BASE     0x0000000000ULL
+#define IO_REGION_SIZE     0x0040000000ULL
+// PU PLIC
+#define PU_PLIC_TIMER0_INTR_ID       6
+#define PU_PLIC_PCIE_MESSAGE_INTR_ID 33
+// SPIO PLIC
+#define SPIO_PLIC_PSHIRE_PCIE0_EDMA0_INTR_ID 96
+#define SPIO_PLIC_MBOX_MMIN_INTR_ID          114
+#define SPIO_PLIC_MBOX_HOST_INTR_ID          115
+#define SPIO_PLIC_GPIO_INTR_ID               122
+// PCIe
+#define ETSOC_CX_ATU_NUM_INBOUND_REGIONS 32
+#define ETSOC_CC_NUM_DMA_WR_CHAN 4
+#define ETSOC_CC_NUM_DMA_RD_CHAN 4
+
+//
+// Mem-Shire Configuration.
+//
+#define EMU_HAS_MEMSHIRE 1
+
+#define EMU_MEM_SHIRE_BASE_ID   232
+#define NUM_MEM_SHIRES          8
+
+//
+// L2 Configuration
+//
+#define EMU_HAS_L2 1
+
+#define L2_SCP_BASE        0x80000000ULL
+#define L2_SCP_OFFSET      0x00800000ULL
+#define L2_SCP_SIZE        0x00400000ULL
+#define L2_SCP_LINEAR_BASE 0xC0000000ULL
+#define L2_SCP_LINEAR_SIZE 0x40000000ULL
+#define SCP_REGION_BASE    0x80000000ULL
+#define SCP_REGION_SIZE    0x80000000ULL
+
+//
+// Main memory size (up to 32GiB)
+//
+#define EMU_DRAM_SIZE  (32ULL*1024ULL*1024ULL*1024ULL)
 
 // Message ports
 #define NR_MSG_PORTS         4
@@ -53,9 +99,6 @@ namespace bemu {
 
 // FastCreditCounters
 #define EMU_NUM_FCC_COUNTERS_PER_THREAD 2
-
-// Main memory size (up to 32GiB)
-#define EMU_DRAM_SIZE  (32ULL*1024ULL*1024ULL*1024ULL)
 
 // VA to PA translation
 #define PA_SIZE        40
@@ -94,9 +137,6 @@ namespace bemu {
 #define MSTATUS_FS      13
 #define MSTATUS_MPP     11
 #define MSTATUS_SPP     8
-
-// L2
-#define SC_NUM_BANKS  4
 
 // CSRs
 enum : uint16_t {
@@ -245,34 +285,6 @@ enum : freg {
 
 // mem reset pattern is 4 bytes (to allow for instance, 0xDEADBEEF)
 #define MEM_RESET_PATTERN_SIZE 4
-
-// L2 scratchpad
-#define L2_SCP_BASE        0x80000000ULL
-#define L2_SCP_OFFSET      0x00800000ULL
-#define L2_SCP_SIZE        0x00400000ULL
-#define L2_SCP_LINEAR_BASE 0xC0000000ULL
-#define L2_SCP_LINEAR_SIZE 0x40000000ULL
-#define SCP_REGION_BASE    0x80000000ULL
-#define SCP_REGION_SIZE    0x80000000ULL
-
-// IO region
-#define IO_REGION_BASE     0x0000000000ULL
-#define IO_REGION_SIZE     0x0040000000ULL
-
-// PU PLIC
-#define PU_PLIC_TIMER0_INTR_ID       6
-#define PU_PLIC_PCIE_MESSAGE_INTR_ID 33
-
-// SPIO PLIC
-#define SPIO_PLIC_PSHIRE_PCIE0_EDMA0_INTR_ID 96
-#define SPIO_PLIC_MBOX_MMIN_INTR_ID          114
-#define SPIO_PLIC_MBOX_HOST_INTR_ID          115
-#define SPIO_PLIC_GPIO_INTR_ID               122
-
-// PCIe
-#define ETSOC_CX_ATU_NUM_INBOUND_REGIONS 32
-#define ETSOC_CC_NUM_DMA_WR_CHAN 4
-#define ETSOC_CC_NUM_DMA_RD_CHAN 4
 
 // PMU
 #define PMU_MINION_EVENT_NONE             0
