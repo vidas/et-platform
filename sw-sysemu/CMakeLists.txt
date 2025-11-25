@@ -169,6 +169,7 @@ set(CORE_SYSEMU_SOURCES
     insns/zicsr.cpp
     insns/zifencei.cpp
     memory/main_memory.cpp
+    pma.cpp
     mmu.cpp
     msgport.cpp
     processor.cpp

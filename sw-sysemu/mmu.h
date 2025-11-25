@@ -17,7 +17,12 @@ namespace bemu {
 
 // Forward declaration
 struct Hart;
+enum class Privilege;
 
+[[noreturn]] void throw_page_fault(uint64_t addr, mem_access_type macc);
+[[noreturn]] void throw_access_fault(uint64_t addr, mem_access_type macc);
+
+Privilege effective_execution_mode(const Hart& cpu, mem_access_type macc);
 
 // MMU virtual to physical address translation
 uint64_t mmu_translate(const Hart& cpu, uint64_t vaddr, size_t bytes,

@@ -36,10 +36,6 @@
 namespace bemu {
 
 
-inline bool paddr_is_maxion_space(uint64_t addr)
-{ return addr < 0x0010000000ULL; }
-
-
 inline bool paddr_is_io_space(uint64_t addr)
 { return addr < 0x0040000000ULL; }
 
@@ -76,10 +72,6 @@ inline bool paddr_is_esr_space(uint64_t addr)
 { return (addr >= 0x0100000000ULL) && (addr < 0x0200000000ULL); }
 
 
-inline bool paddr_is_reserved(uint64_t addr)
-{ return (addr >= 0x0200000000ULL) && (addr < 0x4000000000ULL); }
-
-
 inline bool paddr_is_pcie_space(uint64_t addr)
 { return (addr >= 0x4000000000ULL) && (addr < 0x8000000000ULL); }
 
@@ -110,10 +102,6 @@ inline bool paddr_is_dram_sdata(uint64_t addr)
 
 inline bool paddr_is_dram_osbox(uint64_t addr)
 { return (addr >= 0x8004000000ULL) && (addr < 0x8100000000ULL); }
-
-
-inline bool paddr_is_dram_other(uint64_t addr)
-{ return addr >= 0x8100000000ULL; }
 
 
 inline bool paddr_is_dram(uint64_t addr)
