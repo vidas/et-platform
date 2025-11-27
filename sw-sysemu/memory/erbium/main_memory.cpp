@@ -15,17 +15,17 @@ void MainMemory::reset()
 {
     size_t pos = 0;
 
-    // TODO: These are all simple memory, will have to be implemented as special types
-    regions[pos++].reset(new DenseRegion<dram_base, 16_MiB>());
-    regions[pos++].reset(new DenseRegion<bootrom_base, 8_KiB, false>());
-    regions[pos++].reset(new DenseRegion<sram_base, 8_KiB>());
     regions[pos++].reset(new SysregsEr<erbreg_base>());
-    regions[pos++].reset(new SysregRegion<sysreg_base, 4_GiB>());
+    regions[pos++].reset(new DenseRegion<bootrom_base, 8_KiB, false>());
+    regions[pos++].reset(new DenseRegion<sram_base, 2_KiB>());
+    regions[pos++].reset(new DenseRegion<dram_base, 16_MiB>());
+    // TODO:
+    // regions[pos++].reset(new SysregRegion<sysreg_base, 16_MiB>());
 }
 
 void MainMemory::wdt_clock_tick(const Agent& agent, uint64_t cycle)
 {
-    auto ptr = dynamic_cast<SysregsEr<erbreg_base>*>(regions[3].get());
+    auto ptr = dynamic_cast<SysregsEr<erbreg_base>*>(regions[0].get());
     ptr->wdt_clock_tick(agent, cycle);
 }
 

@@ -39,7 +39,7 @@
 #define SP_RESET_PC 0x0040000000ULL
 #define DRAM_SIZE   16ull << 30;
 #elif EMU_ERBIUM
-#define RESET_PC    0x0040000000ULL // Start of bootrom
+#define RESET_PC    0x000200A000ULL // Start of bootrom
 #define DRAM_SIZE   16ull << 20;
 #else
 #error "Unknown platform"

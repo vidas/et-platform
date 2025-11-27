@@ -25,11 +25,12 @@ namespace bemu {
 // |      Address range (hex)        |          |                   |
 // |      From      |      To        |   Size   | Maps to           |
 // +----------------+----------------+----------+-------------------+
-// | 0x00_0200_0000 | 0x00_02FF_FFFF | 16MiB    | MRAM              |
-// | 0x00_4000_0000 | 0x00_4000_1FFF | 8KiB     | Boot ROM          |
-// | 0x00_4200_0000 | 0x00_4200_1FFF | 8KiB     | Scratch SRAM      |
-// | 0x00_4400_0000 | 0x00_4400_FFFF | 64KiB    | Erbium Registers  |
-// | 0x01_0000_0000 | 0x01_FFFF_FFFF | 4GiB     | ESR Registers     | <- This will be changed once designed is specified.
+// | 0x00_0200_0000 | 0x00_0200_0FFF |  4KiB    | SystemRegisters   |
+// | 0x00_0200_A000 | 0x00_0200_BFFF |  8KiB    | Boot ROM          |
+// | 0x00_0200_E000 | 0x00_0200_E7FF |  2KiB    | Scratch SRAM      |
+// | 0x00_4000_0000 | 0x00_40FF_FFFF | 16MiB    | MRAM              |
+// | 0x00_8000_0000 | 0x00_80FF_FFFF | 16MiB    | ESR Registers     |
+// | 0x00_8100_0000 | 0x00_81FF_FFFF | 16MiB    | PLIC              | <- to be changed
 // +----------------+----------------+----------+-------------------+
 //
 
@@ -44,11 +45,11 @@ struct MainMemory {
 
     enum : unsigned long long {
         // base addresses for the various regions of the address space
-        dram_base           = 0x0002000000ULL, /* Actually MRAM */
-        bootrom_base        = 0x0040000000ULL,
-        sram_base           = 0x0042000000ULL,
-        erbreg_base         = 0x0044000000ULL,
-        sysreg_base         = 0x0100000000ULL,
+        erbreg_base  = 0x0002000000ULL,
+        bootrom_base = 0x000200A000ULL,
+        sram_base    = 0x000200E000ULL,
+        dram_base    = 0x0040000000ULL, /* Actually MRAM */
+        sysreg_base  = 0x0080000000ULL,
     };
 
     // ----- Public methods -----
@@ -106,7 +107,7 @@ protected:
     }
 
     // This array must be sorted by region base address
-    std::array<std::unique_ptr<MemoryRegion>, 5> regions{};
+    std::array<std::unique_ptr<MemoryRegion>, 4> regions{};
 };
 
 

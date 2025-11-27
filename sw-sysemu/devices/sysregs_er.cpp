@@ -10,7 +10,7 @@
 #include "memory/memory_error.h"
 #include "emu_gio.h"
 
-#define SYSREGS_ER_REGION_BASE 0x0044000000ULL
+#define SYSREGS_ER_REGION_BASE 0x0002000000ULL
 
 namespace bemu {
 
