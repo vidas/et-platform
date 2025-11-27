@@ -560,6 +560,19 @@ else()
         RUNTIME DESTINATION ${SYSEMU_INSTALL_DIR}
         COMPONENT tools
     )
+
+    add_executable(erbium_emu sw-sysemu/main.cpp)
+    target_link_libraries(erbium_emu PRIVATE sw-erbium)
+    target_include_directories(erbium_emu
+        PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sys_emu>
+    )
+    target_compile_definitions(erbium_emu PRIVATE ERBIUM)
+    install(TARGETS erbium_emu
+        RUNTIME DESTINATION ${SYSEMU_INSTALL_DIR}
+        COMPONENT tools
+    )
 endif()
 
 if (BENCHMARKS)
