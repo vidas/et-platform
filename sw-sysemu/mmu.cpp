@@ -150,7 +150,7 @@ static inline void check_store_breakpoint(const Hart& cpu, uint64_t addr)
         throw_trap_breakpoint(cpu, addr);
 }
 
-
+#if EMU_HAS_PMA
 //------------------------------------------------------------------------------
 // PMA checks
 
@@ -587,6 +587,41 @@ static uint64_t pma_check_ptw_access(const Hart& cpu, uint64_t vaddr,
 
     throw_access_fault(vaddr, macc);
 }
+#else // !EMU_HAS_PMA
+static uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
+                                      uint64_t addr, size_t size,
+                                      mem_access_type macc,
+                                      mreg_t mask = mreg_t(-1),
+                                      cacheop_type cop = CacheOp_None)
+{
+    (void)cpu;
+    (void)vaddr;
+    (void)size;
+    (void)macc;
+    (void)mask;
+    (void)cop;
+    return addr;
+}
+
+static uint64_t pma_check_ptw_access(const Hart& cpu, uint64_t vaddr,
+                                     uint64_t addr, mem_access_type macc)
+{
+    (void)cpu;
+    (void)vaddr;
+    (void)macc;
+    return addr;
+}
+
+static uint64_t pma_check_fetch_access(const Hart& cpu, uint64_t vaddr,
+                                       uint64_t addr, size_t size)
+{
+    (void)cpu;
+    (void)vaddr;
+    (void)size;
+    return addr;
+}
+
+#endif // EMU_HAS_PMA
 
 
 static uint64_t vmemtranslate(const Hart& cpu, uint64_t vaddr, size_t size,
