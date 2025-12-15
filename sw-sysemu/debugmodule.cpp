@@ -140,6 +140,8 @@ void System::write_dmctrl(uint32_t value)
         LOG_AGENT(DEBUG, noagent, "%s", "dmctrl: halt harts");
         // NB: This will also update HASTATUS0
         for_each_selected([](Hart& hart) { hart.enter_debug_mode(Debug_entry::Cause::haltreq); });
+        // NB: haltreq==0 (clear halt request) is not handled because halting is
+        // atomic in the emulator - there is no pending request to cancel.
         return;
     }
 
