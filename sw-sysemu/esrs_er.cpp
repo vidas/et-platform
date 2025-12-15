@@ -149,49 +149,70 @@ namespace bemu {
 #define THREAD(hart)    ((hart) % EMU_THREADS_PER_MINION)
 
 
-// TODO: Reset value constants
-
-
 void neigh_esrs_t::debug_reset()
 {
-    // TODO: Implement for ERBIUM
+    hactrl = 0;
+    hastatus0 = 0;
+    hastatus1 = 0;
 }
 
 
 void neigh_esrs_t::warm_reset()
 {
-    // TODO: Implement for ERBIUM
+    ipi_redirect_pc = 0;
+    pmu_ctrl = false;
 }
 
 
 void neigh_esrs_t::cold_reset()
 {
-    // TODO: Implement for ERBIUM
+    minion_boot = 0x0200'A000; // boot rom
+    mprot = 0;
+    dummy0 = 0;
+    dummy2 = false;
+    neigh_chicken = 0;
+    icache_err_log_ctl = 0;
+    icache_err_log_info = 0;
+    icache_sbe_dbe_counts = 0;
 }
 
 
 void shire_cache_esrs_t::cold_reset()
 {
-    // TODO: Implement for ERBIUM
+    // No shire cache registers for Erbium
 }
 
 
 void shire_other_esrs_t::warm_reset()
 {
-    // TODO: Implement for ERBIUM
+    for (int i = 0; i < 32; ++i) {
+        fast_local_barrier[i] = 0;
+    }
+    ipi_redirect_filter = 0;
+    ipi_trigger = 0;
+    shire_coop_mode = false;
+    icache_prefetch_active = false;
 }
 
 
 void shire_other_esrs_t::cold_reset(unsigned shireid)
 {
     (void) shireid;
-    // TODO: Implement for ERBIUM
+    minion_feature = 0x01;
+    thread0_disable = 0xFE; // Can be overriden by OTP(?)
+    thread1_disable = 0xFF;
+    mtime_local_target = 0;
+    clk_gate_ctrl = 0;
+    // TODO: no implemented yet
+    // debug_clk_gate_ctrl = 0;
+    // time_config = 0x28;
+    // sm_config = 0;
 }
 
 
 void mem_shire_esrs_t::cold_reset()
 {
-    // TODO: Implement for ERBIUM
+    // No mem shire registers for Erbium
 }
 
 
