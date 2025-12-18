@@ -5,10 +5,8 @@
 
 #include "emu_defines.h"
 #include "emu_gio.h"
-#include "esrs.h"
 #include "fpu/fpu.h"
 #include "fpu/fpu_casts.h"
-#include "insn.h"
 #include "insn.h"
 #include "insn_func.h"
 #include "insn_util.h"

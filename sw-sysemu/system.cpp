@@ -491,6 +491,7 @@ void System::recalculate_thread1_enable(unsigned shire)
         return;
     }
 
+    // TODO: use mask to check disable_multithreading
     uint32_t value = (shire_other_esrs[shire].minion_feature & 0x10)
             ? 0xffffffff
             : shire_other_esrs[shire].thread1_disable;

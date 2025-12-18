@@ -24,7 +24,6 @@
 #include "checkers/l2_scp_checker.h"
 #include "devices/rvtimer.h"
 #include "emu_gio.h"
-#include "esrs.h"
 #include "gdbstub.h"
 #include "insn.h"
 #include "log.h"

@@ -140,7 +140,6 @@ set(CORE_SYSEMU_SOURCES
     agent.cpp
     debugmodule.cpp
     emu_gio.cpp
-    esrs.cpp
     flb.cpp
     gold.cpp
     insns/arith.cpp
@@ -429,6 +428,7 @@ target_sources(sw-erbium PRIVATE
     ${SOFTFLOAT_SOURCES}
     # Erbium-specific sources
     devices/sysregs_er.cpp
+    esrs_er.cpp
     # SW wrapper
 )
 target_include_directories(sw-erbium
@@ -473,6 +473,8 @@ target_sources(sw-sysemu PRIVATE
     # Devices
     devices/pcie_dma.cpp
     devices/spio_misc_region.cpp
+    # Registers
+    esrs_et.cpp
     # SW wrapper
     sw-sysemu/SysEmuImp.cpp
     sw-sysemu/SysEmuImp.h

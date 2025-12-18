@@ -6,7 +6,6 @@
 #include "cache.h"
 #include "emu_defines.h"
 #include "emu_gio.h"
-#include "esrs.h"
 #include "insn_util.h"
 #include "log.h"
 #include "memmap.h"
