@@ -80,5 +80,5 @@ HostProject(esperanto-tools-libs ""
 #
 # Device Management and Control
 #
-HostProject(devicemanagement "" device-api common-sw devicelayer)
+HostProject(devicemanagement "" device-api common-sw devicelayer device-bootloaders)
 HostProject(device-management-application "" common-sw g3log devicelayer devicemanagement et-trace)
