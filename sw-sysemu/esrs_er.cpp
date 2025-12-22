@@ -203,8 +203,7 @@ void shire_other_esrs_t::cold_reset(unsigned shireid)
     thread1_disable = 0xFF;
     mtime_local_target = 0;
     clk_gate_ctrl = 0;
-    // TODO: no implemented yet
-    // debug_clk_gate_ctrl = 0;
+    debug_clk_gate_ctrl = 0;
     // time_config = 0x28;
     // sm_config = 0;
 }
@@ -386,8 +385,7 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
         case ESR_CLK_GATE_CTRL:
             return shire_other_esrs[shire].clk_gate_ctrl;
         case ESR_DEBUG_CLK_GATE_CTRL:
-            // TODO: new, no spec
-            return 0;
+            return shire_other_esrs[shire].debug_clk_gate_ctrl;
         case ESR_DMCTRL:
             return agent.chip->read_dmctrl();
         case ESR_SM_CONFIG:
@@ -683,10 +681,9 @@ void System::esr_write(const Agent& agent, uint64_t addr, uint64_t value)
                       shireid(shire), shire_other_esrs[shire].clk_gate_ctrl);
             return;
         case ESR_DEBUG_CLK_GATE_CTRL:
-            // TODO: implement
-            // shire_other_esrs[shire].debug_clk_gate_ctrl = uint8_t(value & 0x2);
-            // LOG_AGENT(DEBUG, agent, "S%u:debug_clk_gate_ctrl = 0x%" PRIx8,
-            //           shireid(shire), shire_other_esrs[shire].debug_clk_gate_ctrl);
+            shire_other_esrs[shire].debug_clk_gate_ctrl = uint8_t(value & 0x1);
+            LOG_AGENT(DEBUG, agent, "S%u:debug_clk_gate_ctrl = 0x%" PRIx8,
+                      shireid(shire), shire_other_esrs[shire].debug_clk_gate_ctrl);
             return;
         case ESR_DMCTRL:
             agent.chip->write_dmctrl(uint32_t(value & 0xF400'000F));
