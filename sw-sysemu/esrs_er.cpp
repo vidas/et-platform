@@ -199,7 +199,7 @@ void shire_other_esrs_t::cold_reset(unsigned shireid)
 {
     (void) shireid;
     minion_feature = 0x01;
-    thread0_disable = 0xFE; // Can be overriden by OTP(?)
+    thread0_disable = 0xFE; // Only start minion 0 hart 0.
     thread1_disable = 0xFF;
     mtime_local_target = 0;
     clk_gate_ctrl = 0;
