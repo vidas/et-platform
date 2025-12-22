@@ -754,7 +754,7 @@ void System::write_icache_prefetch(Privilege /*privilege*/, unsigned shire, uint
     (void)(value);
 #else
     if (!shire_other_esrs[shire].icache_prefetch_active) {
-        bool active = ((value >> 48) & 0xF) && shire_other_esrs[shire].shire_coop_mode;
+        bool active = shire_other_esrs[shire].shire_coop_mode;
         shire_other_esrs[shire].icache_prefetch_active = active;
     }
 #endif
