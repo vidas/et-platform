@@ -44,6 +44,8 @@ namespace bemu {
 // Main memory size (16MB of MRAM)
 #define EMU_DRAM_SIZE  (16ULL*1024ULL*1024ULL)
 
+#define PA_SIZE        32
+
 #elif EMU_ETSOC1
 
 // Maximum number of threads
@@ -123,6 +125,8 @@ namespace bemu {
 #define EMU_DRAM_SIZE  (32ULL*1024ULL*1024ULL*1024ULL)
 #define EMU_HAS_HIGH_MEMORY 1
 
+#define PA_SIZE        40
+
 #else
 #error "Architecture unspecified."
 #endif
@@ -148,8 +152,6 @@ namespace bemu {
 #define EMU_NUM_FCC_COUNTERS_PER_THREAD 2
 
 // VA to PA translation
-// TODO: Different for Erbium.
-#define PA_SIZE        40
 #define PA_M           ((((uint64_t)1) << PA_SIZE) - 1)
 #define VA_SIZE        48
 #define VA_M           ((((uint64_t)1) << VA_SIZE) - 1)
