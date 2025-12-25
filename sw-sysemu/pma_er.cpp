@@ -281,8 +281,30 @@ uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
 uint64_t pma_check_fetch_access(const Hart& cpu, uint64_t vaddr,
                                 uint64_t addr, size_t size)
 {
-    (void)cpu; (void)vaddr; (void)size;
-    return addr;
+    (void)size;
+
+    if (paddr_is_bootrom(addr)) {
+        return addr;
+    }
+
+    if (paddr_is_sram(addr)) {
+        return addr;
+    }
+
+    if (paddr_is_mram(addr)) {
+        // MRAM subject to MPROT protection
+        uint16_t mprot = cpu.chip->neigh_esrs[neigh_index(cpu)].mprot;
+
+        Privilege mode = effective_execution_mode(cpu, Mem_Access_Fetch);
+
+        if (!check_mram_pmp_access(addr, mprot, mode)) {
+            throw_access_fault(vaddr, Mem_Access_Fetch);
+        }
+
+        return addr;
+    }
+
+    throw_access_fault(vaddr, Mem_Access_Fetch);
 }
 
 
