@@ -148,7 +148,10 @@ uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
     (void)mask; (void)cop;
 
     bool amo = (macc == Mem_Access_AtomicL) || (macc == Mem_Access_AtomicG);
-    bool ts_tl_co = (macc >= Mem_Access_TxLoad) && (macc <= Mem_Access_CacheOp);
+    bool tensor = (macc == Mem_Access_TxLoad) || (macc == Mem_Access_TxStore)
+                  || (macc == Mem_Access_TxLoadL2Scp);
+    bool cacheop = (macc == Mem_Access_CacheOp);
+    bool ts_tl_co = tensor || cacheop;
 
     if (paddr_is_mram(addr)) {
         uint16_t mprot = cpu.chip->neigh_esrs[neigh_index(cpu)].mprot;
@@ -166,37 +169,109 @@ uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
         int pp = PP(addr);
         Privilege mode = effective_execution_mode(cpu, macc);
 
-        if (amo                                     // No AMO allowed
-            || ts_tl_co                             // No TensorOp/CacheOp
-            || (size != 8)                          // Must be 64-bit access
-            || !addr_is_size_aligned(addr, size)    // Must be 64-bit aligned
-            || (pp > static_cast<int>(mode)))       // Insufficient privilege
+        // ESRs: 64-bit aligned, 64-bit access, no AMO/TensorOp/CacheOp,
+        // address encoded (PP) privilege requirements
+        if (amo
+            || ts_tl_co
+            || (size != 8)
+            || !addr_is_size_aligned(addr, size)
+            || (pp > static_cast<int>(mode)))
         {
             throw_access_fault(vaddr, macc);
         }
         return addr;
     }
 
-    if (paddr_is_plic(addr))
+    if (paddr_is_plic(addr)) {
+        // PLIC: 32-bit aligned, 32-bit access, no AMO/TensorOp/CacheOp
+        if (amo
+            || ts_tl_co
+            || (size != 4)
+            || !addr_is_size_aligned(addr, 4))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_bootrom(addr))
+    if (paddr_is_bootrom(addr)) {
+        // Bootrom: Read-only, no AMO, no TensorOp (CacheOp allowed)
+        if (amo
+            || tensor
+            || data_access_is_write(macc))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_sram(addr))
+    if (paddr_is_sram(addr)) {
+        // SRAM: No AMO (TensorOp and CacheOp allowed)
+        if (amo) {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_sysreg(addr))
+    if (paddr_is_sysreg(addr)) {
+        // System registers: 64-bit aligned, 32/64-bit access, M/S privilege,
+        // no AMO/TensorOp/CacheOp
+        Privilege mode = effective_execution_mode(cpu, macc);
+        if (amo
+            || ts_tl_co
+            || ((size != 4) && (size != 8))
+            || !addr_is_size_aligned(addr, 8)
+            || (mode == Privilege::U))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_mramreg(addr))
+    if (paddr_is_mramreg(addr)) {
+        // MRAM registers: 64-bit aligned, 64-bit access, M-mode only,
+        // no AMO/TensorOp/CacheOp
+        Privilege mode = effective_execution_mode(cpu, macc);
+        if (amo
+            || ts_tl_co
+            || (size != 8)
+            || !addr_is_size_aligned(addr, 8)
+            || (mode != Privilege::M))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_periph(addr))
+    if (paddr_is_periph(addr)) {
+        // Periph registers: 32-bit aligned, 32-bit access, M/S privilege,
+        // no AMO/TensorOp/CacheOp
+        Privilege mode = effective_execution_mode(cpu, macc);
+        if (amo
+            || ts_tl_co
+            || (size != 4)
+            || !addr_is_size_aligned(addr, 4)
+            || (mode == Privilege::U))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
-    if (paddr_is_hyperbus(addr))
+    if (paddr_is_hyperbus(addr)) {
+        // Hyperbus registers: 32-bit aligned, 32-bit access, M-mode only,
+        // no AMO/TensorOp/CacheOp
+        Privilege mode = effective_execution_mode(cpu, macc);
+        if (amo
+            || ts_tl_co
+            || (size != 4)
+            || !addr_is_size_aligned(addr, 4)
+            || (mode != Privilege::M))
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
     // Unknown/reserved region - access fault
     throw_access_fault(vaddr, macc);
