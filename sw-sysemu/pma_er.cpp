@@ -80,11 +80,60 @@ static bool data_access_is_write(mem_access_type macc)
 }
 
 
-//------------------------------------------------------------------------------
 // PP (privilege protection) bits extraction from ESR address
-// Bits [23:22] encode minimum privilege level required
-
 #define PP(x) (int(((x) & ESR_REGION_PROT_MASK) >> ESR_REGION_PROT_SHIFT))
+
+
+//------------------------------------------------------------------------------
+// MRAM PMP
+
+#define MPROT_EN              0x100
+#define MPROT_MMODE_SIZE(x)   (((x) >> 4) & 0xF)
+#define MPROT_SMODE_SIZE(x)   ((x) & 0xF)
+#define MRAM_BASE             0x40000000ull
+
+// mmode_end = MRAM_BASE + 4KB * (2^mmode_size), capped at 16MB
+static inline uint64_t mmode_region_end(uint16_t mprot)
+{
+    unsigned mmode_size = MPROT_MMODE_SIZE(mprot);
+    // Cap at 16MB
+    uint64_t size = 0x1000ull << (mmode_size > 12 ? 12 : mmode_size);
+    return MRAM_BASE + size;
+}
+
+// smode_end = MRAM_BASE + 4KB * (2^smode_size), capped at 16MB
+static inline uint64_t smode_region_end(uint16_t mprot)
+{
+    unsigned smode_size = MPROT_SMODE_SIZE(mprot);
+    // Cap at 16MB
+    uint64_t size = 0x1000ull << (smode_size > 12 ? 12 : smode_size);
+    return MRAM_BASE + size;
+}
+
+static bool check_mram_pmp_access(uint64_t addr, uint16_t mprot, Privilege mode) {
+    // When MPROT_EN is set:
+    //   - [MRAM_BASE, mmode_end): M-mode only
+    //   - [mmode_end, smode_end): S-mode and above
+    //   - [smode_end, ...): All modes (U/S/M)
+
+    if (mprot & MPROT_EN) {
+        uint64_t mmode_end = mmode_region_end(mprot);
+        uint64_t smode_end = smode_region_end(mprot);
+
+        if (addr < mmode_end) {
+            if (mode != Privilege::M) {
+                return false;
+            }
+        }
+        else if (smode_end > mmode_end && addr < smode_end) {
+            if (mode == Privilege::U) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 
 
 //------------------------------------------------------------------------------
@@ -101,8 +150,17 @@ uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
     bool amo = (macc == Mem_Access_AtomicL) || (macc == Mem_Access_AtomicG);
     bool ts_tl_co = (macc >= Mem_Access_TxLoad) && (macc <= Mem_Access_CacheOp);
 
-    if (paddr_is_mram(addr))
+    if (paddr_is_mram(addr)) {
+        uint16_t mprot = cpu.chip->neigh_esrs[neigh_index(cpu)].mprot;
+
+        Privilege mode = effective_execution_mode(cpu, macc);
+
+        if (!check_mram_pmp_access(addr, mprot, mode)) {
+            throw_access_fault(vaddr, macc);
+        }
+
         return addr;
+    }
 
     if (paddr_is_esr(addr)) {
         int pp = PP(addr);
