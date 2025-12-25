@@ -9,6 +9,7 @@
 #include "mmu.h"
 #include "esrs.h"
 #include "system.h"
+#include "utility.h"
 
 namespace bemu {
 
@@ -95,13 +96,28 @@ uint64_t pma_check_data_access(const Hart& cpu, uint64_t vaddr,
                                mreg_t mask,
                                cacheop_type cop)
 {
-    (void)cpu; (void)size; (void)mask; (void)cop;
+    (void)mask; (void)cop;
+
+    bool amo = (macc == Mem_Access_AtomicL) || (macc == Mem_Access_AtomicG);
+    bool ts_tl_co = (macc >= Mem_Access_TxLoad) && (macc <= Mem_Access_CacheOp);
 
     if (paddr_is_mram(addr))
         return addr;
 
-    if (paddr_is_esr(addr))
+    if (paddr_is_esr(addr)) {
+        int pp = PP(addr);
+        Privilege mode = effective_execution_mode(cpu, macc);
+
+        if (amo                                     // No AMO allowed
+            || ts_tl_co                             // No TensorOp/CacheOp
+            || (size != 8)                          // Must be 64-bit access
+            || !addr_is_size_aligned(addr, size)    // Must be 64-bit aligned
+            || (pp > static_cast<int>(mode)))       // Insufficient privilege
+        {
+            throw_access_fault(vaddr, macc);
+        }
         return addr;
+    }
 
     if (paddr_is_plic(addr))
         return addr;
