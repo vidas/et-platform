@@ -39,7 +39,6 @@ namespace bemu {
 #define EMU_HAS_MEMSHIRE 0
 #define EMU_HAS_SPIO 0
 #define EMU_HAS_PU 0
-#define EMU_HAS_PMA 0
 #define EMU_HAS_PTW 0
 
 // Main memory size (16MB of MRAM)
@@ -110,11 +109,6 @@ namespace bemu {
 #define L2_SCP_LINEAR_SIZE 0x40000000ULL
 #define SCP_REGION_BASE    0x80000000ULL
 #define SCP_REGION_SIZE    0x80000000ULL
-
-//
-// PMA Configuration
-//
-#define EMU_HAS_PMA 1
 
 //
 // PTW Configuration
