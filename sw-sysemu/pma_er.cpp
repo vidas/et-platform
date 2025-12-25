@@ -311,8 +311,9 @@ uint64_t pma_check_fetch_access(const Hart& cpu, uint64_t vaddr,
 uint64_t pma_check_ptw_access(const Hart& cpu, uint64_t vaddr,
                               uint64_t addr, mem_access_type macc)
 {
-    (void)cpu; (void)vaddr; (void)macc;
-    return addr;
+    (void)cpu; (void)vaddr; (void)addr; (void)macc;
+    // Erbium does not support PTW - always operates in bare mode
+    throw std::runtime_error("pma_check_ptw_access: PTW not supported on Erbium");
 }
 
 } // namespace bemu
