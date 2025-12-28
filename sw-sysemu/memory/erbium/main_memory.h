@@ -116,6 +116,7 @@ public:
     void rvtimer_clock_tick(const Agent&);
     void rvtimer_write_mtime(const Agent&, uint64_t value);
     void rvtimer_write_mtimecmp(const Agent&, uint64_t value);
+    void rvtimer_reset();
 
 protected:
     static inline bool above(const std::unique_ptr<MemoryRegion>& lhs, addr_type rhs) {

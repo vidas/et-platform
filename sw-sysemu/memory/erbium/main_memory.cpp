@@ -56,4 +56,8 @@ void MainMemory::rvtimer_write_mtimecmp(const Agent& agent, uint64_t value) {
     rvtimer().write_mtimecmp(agent, value);
 }
 
+void MainMemory::rvtimer_reset() {
+    rvtimer().reset();
+}
+ 
 } // namespace bemu
