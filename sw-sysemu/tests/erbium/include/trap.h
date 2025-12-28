@@ -13,6 +13,9 @@
 #define CAUSE_LOAD_ACCESS_FAULT         5
 #define CAUSE_STORE_ACCESS_FAULT        7
 
+/* Interrupt cause codes (bit 63 set + interrupt code) */
+#define CAUSE_MACHINE_TIMER_INTERRUPT   0x8000000000000007ULL
+
 /* Set expected exception cause in mscratch.
  * When trap occurs with matching cause -> PASS
  * When trap occurs with different cause -> FAIL
