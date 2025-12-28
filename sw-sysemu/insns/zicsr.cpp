@@ -24,10 +24,17 @@
 
 
 // vendor, arch, imp, ISA values
+#if EMU_ERBIUM
+// TODO: Erbium values for mvendorid, marchid, mimpid are yet to be defined
+#define CSR_VENDOR_ID 0
+#define CSR_ARCH_ID   0
+#define CSR_IMP_ID    0
+#else
 #define CSR_VENDOR_ID ((11<<7) |        /* bank 11 */ \
                        (0xe5 & 0x7f))   /* 0xE5 (0x65 without parity) */
 #define CSR_ARCH_ID 0x8000000000000001ull
 #define CSR_IMP_ID  0x0
+#endif
 #define CSR_ISA_MAX ((1ull << 2)  | /* "C" Compressed extension */                      \
                      (1ull << 5)  | /* "F" Single-precision floating-point extension */ \
                      (1ull << 8)  | /* "I" RV32I/64I/128I base ISA */                   \
