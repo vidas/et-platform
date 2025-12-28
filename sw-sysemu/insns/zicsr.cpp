@@ -490,10 +490,12 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
     case CSR_GSC_PROGRESS:
         val = cpu.gsc_progress;
         break;
+#if EMU_HAS_L2
     case CSR_TENSOR_LOAD_L2:
         require_feature_ml();
         val = 0;
         break;
+#endif
     case CSR_TENSOR_STORE:
         require_feature_ml_on_thread0();
         val = 0;
