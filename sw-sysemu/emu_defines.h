@@ -41,8 +41,9 @@ namespace bemu {
 #define EMU_HAS_SPIO 0
 #define EMU_HAS_PU 0
 #define EMU_HAS_PTW 0
-#define EMU_HAS_TENSOR_REDUCE_VALIDATION 1
 #define EMU_HAS_GFX 0
+#define EMU_HAS_MSG_PORTS 0
+#define EMU_HAS_TENSOR_REDUCE_VALIDATION 1
 #define EMU_TENSOR_REDUCE_MAX_MINION_ID (EMU_NUM_MINIONS - 1)
 #define EMU_TENSOR_REDUCE_MAX_HEIGHT 2
 
@@ -128,6 +129,11 @@ namespace bemu {
 // Graphics (tex_send CSR)
 //
 #define EMU_HAS_GFX 1
+
+//
+// Message ports (portctrl, porthead CSRs)
+//
+#define EMU_HAS_MSG_PORTS 1
 
 //
 // Main memory size (up to 32GiB)

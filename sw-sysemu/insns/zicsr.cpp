@@ -528,16 +528,19 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
         require_feature_u_cacheops();
         val = 0;
         break;
+#if EMU_HAS_MSG_PORTS
     case CSR_PORTCTRL0:
     case CSR_PORTCTRL1:
     case CSR_PORTCTRL2:
     case CSR_PORTCTRL3:
         val = read_port_control(cpu, csr - CSR_PORTCTRL0);
         break;
+#endif
     case CSR_FCCNB:
         require_feature_ml();
         val = (uint64_t(cpu.fcc[1]) << 16) + uint64_t(cpu.fcc[0]);
         break;
+#if EMU_HAS_MSG_PORTS
     case CSR_PORTHEAD0:
     case CSR_PORTHEAD1:
     case CSR_PORTHEAD2:
@@ -550,6 +553,7 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
     case CSR_PORTHEADNB3:
         val = read_port_head(cpu, csr - CSR_PORTHEADNB0, false);
         break;
+#endif
     case CSR_HARTID:
         if (PRV != Privilege::M && (cpu.core->menable_shadows & 1) == 0) {
             throw trap_illegal_instruction(cpu.inst.bits);
@@ -1224,6 +1228,7 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         val &= 0xC000FFFFFFFFFFCFULL;
         dcache_unlock_vaddr(cpu, val);
         break;
+#if EMU_HAS_MSG_PORTS
     case CSR_PORTCTRL0:
     case CSR_PORTCTRL1:
     case CSR_PORTCTRL2:
@@ -1231,7 +1236,9 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         val = legalize_portctrl(val);
         configure_port(cpu, csr - CSR_PORTCTRL0, val);
         break;
+#endif
     case CSR_FCCNB:
+#if EMU_HAS_MSG_PORTS
     case CSR_PORTHEAD0:
     case CSR_PORTHEAD1:
     case CSR_PORTHEAD2:
@@ -1240,6 +1247,7 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
     case CSR_PORTHEADNB1:
     case CSR_PORTHEADNB2:
     case CSR_PORTHEADNB3:
+#endif
     case CSR_HARTID:
         throw trap_illegal_instruction(cpu.inst.bits);
         // ----- All other registers -------------------------------------
