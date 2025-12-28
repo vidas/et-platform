@@ -1050,7 +1050,8 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         break;
     case CSR_TENSOR_COOP:
         require_feature_ml_on_thread0();
-        val &= 0xfff1f;
+        // group [4:0], minions [15:8], neighs [19:16] (width depends on EMU_NEIGH_PER_SHIRE)
+        val &= 0xff1f | (((1 << EMU_NEIGH_PER_SHIRE) - 1) << 16);
         cpu.tensor_coop = val;
         break;
     case CSR_TENSOR_MASK:
