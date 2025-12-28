@@ -389,9 +389,10 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
         case ESR_DMCTRL:
             return agent.chip->read_dmctrl();
         case ESR_SM_CONFIG:
-            // TODO: implement Status Monitor in debug module
+            // Status Monitor not implemented.
             return 0;
         case ESR_SM_TRIGGER:
+            // Status Monitor not implemented.
             return 0; // WARL
         case ESR_SM_MATCH:
         case ESR_SM_FILTER0:
@@ -399,7 +400,7 @@ uint64_t System::esr_read(const Agent& agent, uint64_t addr)
         case ESR_SM_FILTER2:
         case ESR_SM_DATA0:
         case ESR_SM_DATA1:
-            // TODO: implement Status Monitor in debug module
+            // Status Monitor not implemented.
             return 0;
         }
         WARN_AGENT(esrs, agent, "Read unknown shire_other ESR S%u:0x%" PRIx64, shireid(shire), esr);
@@ -691,16 +692,8 @@ void System::esr_write(const Agent& agent, uint64_t addr, uint64_t value)
                       shireid(shire), uint32_t(value & 0xF400'000F));
             return;
         case ESR_SM_CONFIG:
-            // TODO: implement Status Monitor in debug module
-            // shire_other_esrs[shire].sm_config = uint16_t(value & 0xFFF);
-            // LOG_AGENT(DEBUG, agent, "S%u:sm_config = 0x%" PRIx16,
-            //           shireid(shire), shire_other_esrs[shire].sm_config);
-            return;
         case ESR_SM_TRIGGER:
-            // TODO: implement Status Monitor in debug module
-            // shire_other_esrs[shire].sm_trigger = uint8_t(value & 0x1);
-            // LOG_AGENT(DEBUG, agent, "S%u:sm_trigger = 0x%" PRIx8,
-            //           shireid(shire), shire_other_esrs[shire].sm_trigger);
+            // No-op - emulator has no low level state information.
             return;
         }
         WARN_AGENT(esrs, agent, "Write unknown shire_other ESR S%u:0x%" PRIx64, shireid(shire), esr);
