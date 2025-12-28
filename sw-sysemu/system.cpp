@@ -140,6 +140,11 @@ void System::cold_reset(void)
     // Cold-reset memshire.
     mem_shire_esrs.cold_reset();
 #endif
+
+#if EMU_HAS_RVTIMER
+    // Cold-reset RVTimer.
+    memory.rvtimer_reset();
+#endif
 }
 
 void System::raise_machine_timer_interrupt(unsigned shire)

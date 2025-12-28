@@ -64,4 +64,10 @@ void MainMemory::rvtimer_write_mtimecmp(const Agent& agent, uint64_t value)
     ptr->rvtimer.write_mtimecmp(agent, value);
 }
 
+void MainMemory::rvtimer_reset()
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    ptr->rvtimer.reset();
+}
+
 } // namespace bemu
