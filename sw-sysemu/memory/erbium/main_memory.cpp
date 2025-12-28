@@ -28,4 +28,40 @@ void MainMemory::wdt_clock_tick(const Agent& agent, uint64_t cycle)
     ptr->wdt_clock_tick(agent, cycle);
 }
 
+bool MainMemory::rvtimer_is_active() const
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    return ptr->rvtimer.is_active();
+}
+
+uint64_t MainMemory::rvtimer_read_mtime() const
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    return ptr->rvtimer.read_mtime();
+}
+
+uint64_t MainMemory::rvtimer_read_mtimecmp() const
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    return ptr->rvtimer.read_mtimecmp();
+}
+
+void MainMemory::rvtimer_clock_tick(const Agent& agent)
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    ptr->rvtimer.clock_tick(agent);
+}
+
+void MainMemory::rvtimer_write_mtime(const Agent& agent, uint64_t value)
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    ptr->rvtimer.write_mtime(agent, value);
+}
+
+void MainMemory::rvtimer_write_mtimecmp(const Agent& agent, uint64_t value)
+{
+    auto ptr = dynamic_cast<SysregRegion<sysreg_base, 16_MiB>*>(regions[4].get());
+    ptr->rvtimer.write_mtimecmp(agent, value);
+}
+
 } // namespace bemu
