@@ -307,7 +307,7 @@ inline void set_rounding_mode(Hart& cpu, uint_fast8_t value) {
 
 
 #define require_feature_gfx() do { \
-    if (cpu.chip->shire_other_esrs[shire_index(cpu)].minion_feature & 0x1) \
+    if (!EMU_HAS_GFX || (cpu.chip->shire_other_esrs[shire_index(cpu)].minion_feature & 0x1)) \
         throw trap_illegal_instruction(cpu.inst.bits); \
 } while (0)
 

@@ -42,6 +42,7 @@ namespace bemu {
 #define EMU_HAS_PU 0
 #define EMU_HAS_PTW 0
 #define EMU_HAS_TENSOR_REDUCE_VALIDATION 1
+#define EMU_HAS_GFX 0
 #define EMU_TENSOR_REDUCE_MAX_MINION_ID (EMU_NUM_MINIONS - 1)
 #define EMU_TENSOR_REDUCE_MAX_HEIGHT 2
 
@@ -122,6 +123,11 @@ namespace bemu {
 // Note: ET-SOC-1 PTW is presumably broken, but is left
 // enabled in the emulator to support the code that expects it.
 #define EMU_HAS_PTW 1
+
+//
+// Graphics (tex_send CSR)
+//
+#define EMU_HAS_GFX 1
 
 //
 // Main memory size (up to 32GiB)
