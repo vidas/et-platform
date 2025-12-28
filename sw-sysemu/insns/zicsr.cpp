@@ -200,7 +200,11 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
         val = cpu.mip & cpu.mideleg;
         break;
     case CSR_SATP:
+#if EMU_HAS_PTW
         val = cpu.core->satp;
+#else
+        val = 0;  // Hardwired to bare mode
+#endif
         break;
     case CSR_MSTATUS:
         val = cpu.mstatus;
@@ -408,7 +412,11 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
         break;
         // ----- Esperanto registers -------------------------------------
     case CSR_MATP:
+#if EMU_HAS_PTW
         val = cpu.core->matp;
+#else
+        val = 0;  // Hardwired to bare mode
+#endif
         break;
     case CSR_MINSTMASK:
         val = cpu.minstmask;
@@ -662,6 +670,7 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         val &= cpu.mideleg;
         break;
     case CSR_SATP: // Shared register
+#if EMU_HAS_PTW
         // MODE is 4 bits, ASID is 0bits, PPN is PPN_M bits
         val &= 0xF000000000000000ULL | PPN_M;
         switch (val >> 60) {
@@ -674,6 +683,9 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
             // do not write the register if attempting to set an unsupported mode
             break;
         }
+#else
+        val = 0;  // Hardwired to bare mode, writes ignored
+#endif
         break;
     case CSR_MSTATUS:
         // Preserve sd, sxl, uxl, xs
@@ -932,6 +944,7 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         throw trap_illegal_instruction(cpu.inst.bits);
         // ----- Esperanto registers -------------------------------------
     case CSR_MATP: // Shared register
+#if EMU_HAS_PTW
         // do not write the register if it is locked (L==1)
         if (~cpu.core->matp & 0x800000000000000ULL) {
             // MODE is 4 bits, L is 1 bits, ASID is 0bits, PPN is PPN_M bits
@@ -947,6 +960,11 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
                 break;
             }
         }
+#else
+        // Hardwired to bare mode
+        val = 0;
+        cpu.core->matp = 0;
+#endif
         break;
     case CSR_MINSTMASK:
         val &= 0x1ffffffffULL;
