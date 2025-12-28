@@ -174,6 +174,9 @@ static uint64_t csrget(Hart& cpu, uint16_t csr)
     case CSR_SSTATUS:
         // Hide sxl, tsr, tw, tvm, mprv, mpp, mpie, mie
         val = cpu.mstatus & 0x80000003000DE133ULL;
+#if !EMU_HAS_PTW
+        val &= ~(1ULL << MSTATUS_SUM);  // SUM is RO(0) without PTW
+#endif
         break;
     case CSR_SIE:
         val = cpu.mie & cpu.mideleg;
@@ -611,6 +614,9 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         // Preserve sd, sxl, uxl, tsr, tw, tvm, mprv, xs, mpp, mpie, mie
         // Modify mxr, sum, fs, spp, spie, (upie=0), sie, (uie=0)
         val = (val & 0x00000000000C6122ULL) | (cpu.mstatus & 0x0000000F00739888ULL);
+#if !EMU_HAS_PTW
+        val &= ~(1ULL << MSTATUS_SUM);  // SUM is RO(0) without PTW
+#endif
         // Setting fs=1 or fs=2 will set fs=3
         if (val & 0x6000ULL) {
             val |= 0x6000ULL;
@@ -691,6 +697,9 @@ static uint64_t csrset(Hart& cpu, uint16_t csr, uint64_t val)
         // Preserve sd, sxl, uxl, xs
         // Write all others (except upie=0, uie=0)
         val = (val & 0x00000000007E79AAULL) | (cpu.mstatus & 0x0000000F00018000ULL);
+#if !EMU_HAS_PTW
+        val &= ~(1ULL << MSTATUS_SUM);  // SUM is RO(0) without PTW
+#endif
         // Setting fs=1 or fs=2 will set fs=3
         if (val & 0x6000ULL) {
             val |= 0x6000ULL;
