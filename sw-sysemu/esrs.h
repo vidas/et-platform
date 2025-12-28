@@ -76,7 +76,7 @@ struct neigh_esrs_t {
     uint16_t texture_control;
     uint16_t texture_status;
     uint8_t  icache_err_log_ctl;
-    uint8_t  mprot;
+    uint16_t mprot;
     uint8_t  neigh_chicken;
     uint8_t  vmspagesize;
     bool     dummy2;
