@@ -34,6 +34,7 @@ namespace bemu {
 #define EMU_NUM_THREADS         (EMU_NUM_MINION_SHIRES * EMU_THREADS_PER_SHIRE)
 
 #define EMU_HAS_WDT 1
+#define EMU_HAS_RVTIMER 1
 #define EMU_HAS_L2 0
 #define EMU_HAS_SVCPROC 0
 #define EMU_HAS_MEMSHIRE 0

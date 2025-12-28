@@ -50,7 +50,12 @@ struct SysregRegion : public MemoryRegion {
 
     void dump_data(const Agent&, std::ostream&, size_type, size_type) const override { }
 
+#if EMU_HAS_PU
     RVTimer<(1ull << EMU_NUM_MINION_SHIRES) - 1> ioshire_pu_rvtimer;
+#endif
+#if EMU_HAS_RVTIMER
+    RVTimer<(1ull << EMU_NUM_MINION_SHIRES) - 1> rvtimer;
+#endif
 };
 
 

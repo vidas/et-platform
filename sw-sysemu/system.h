@@ -520,6 +520,9 @@ inline void System::tick_peripherals(uint64_t cycle)
 #if EMU_HAS_SPIO
         memory.spio_rvtimer_clock_tick(noagent);
 #endif
+#if EMU_HAS_RVTIMER
+        memory.rvtimer_clock_tick(noagent);
+#endif
 
 #if EMU_HAS_PU
         memory.pu_apb_timers_clock_tick(*this);
@@ -539,6 +542,10 @@ inline bool System::timers_active(void)
 #endif
 #if EMU_HAS_PU
     if (memory.pu_rvtimer_is_active())
+        return true;
+#endif
+#if EMU_HAS_RVTIMER
+    if (memory.rvtimer_is_active())
         return true;
 #endif
     return false;

@@ -109,10 +109,20 @@ public:
 
     void wdt_clock_tick(const Agent& agent, uint64_t cycle);
 
+    // RVTimer helpers
+    bool rvtimer_is_active() const;
+    uint64_t rvtimer_read_mtime() const;
+    uint64_t rvtimer_read_mtimecmp() const;
+    void rvtimer_clock_tick(const Agent&);
+    void rvtimer_write_mtime(const Agent&, uint64_t value);
+    void rvtimer_write_mtimecmp(const Agent&, uint64_t value);
+
 protected:
     static inline bool above(const std::unique_ptr<MemoryRegion>& lhs, addr_type rhs) {
         return lhs->last() < rhs;
     }
+
+    inline auto& rvtimer() const;
 
     MemoryRegion* search(addr_type addr, size_type n) const {
         auto lo = std::lower_bound(regions.cbegin(), regions.cend(), addr, above);
