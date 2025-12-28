@@ -107,7 +107,7 @@ protected:
     }
 
     // This array must be sorted by region base address
-    std::array<std::unique_ptr<MemoryRegion>, 4> regions{};
+    std::array<std::unique_ptr<MemoryRegion>, 5> regions{};
 };
 
 

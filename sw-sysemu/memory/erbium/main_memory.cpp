@@ -19,8 +19,7 @@ void MainMemory::reset()
     regions[pos++].reset(new DenseRegion<bootrom_base, 8_KiB, false>());
     regions[pos++].reset(new DenseRegion<sram_base, 2_KiB>());
     regions[pos++].reset(new DenseRegion<dram_base, 16_MiB>());
-    // TODO:
-    // regions[pos++].reset(new SysregRegion<sysreg_base, 16_MiB>());
+    regions[pos++].reset(new SysregRegion<sysreg_base, 16_MiB>());
 }
 
 void MainMemory::wdt_clock_tick(const Agent& agent, uint64_t cycle)
