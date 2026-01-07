@@ -284,6 +284,7 @@ private:
     std::array<uint32_t, T>       max_id;    // Interrupt MaxID (per target)
 };
 
+#if EMU_HAS_PU
 template <unsigned long long Base, size_t N>
 struct PU_PLIC : public PLIC<Base, N, 41, 12>
 {
@@ -315,7 +316,9 @@ struct PU_PLIC : public PLIC<Base, N, 41, 12>
         return targets;
     }
 };
+#endif // EMU_HAS_PU
 
+#if EMU_HAS_SPIO
 template <unsigned long long Base, size_t N>
 struct SP_PLIC : public PLIC<Base, N, 148, 2>
 {
@@ -339,6 +342,38 @@ struct SP_PLIC : public PLIC<Base, N, 148, 2>
         static const std::vector<PLIC_Interrupt_Target> targets = {
             {0, 0, Target_SP_Machine_external_interrupt},
             {1, 1, Target_SP_Supervisor_external_interrupt},
+        };
+        return targets;
+    }
+};
+#endif // EMU_HAS_SPIO
+
+// Erbium PLIC: 32 interrupt sources, 2 targets (M-mode and S-mode)
+template <unsigned long long Base, size_t N>
+struct ER_PLIC : public PLIC<Base, N, 32, 2>
+{
+    static void Target_Machine_external_interrupt(System* system, bool raise) {
+        if (raise) {
+            system->raise_machine_external_interrupt(0);
+        } else {
+            system->clear_machine_external_interrupt(0);
+        }
+    }
+
+    static void Target_Supervisor_external_interrupt(System* system, bool raise) {
+        if (raise) {
+            system->raise_supervisor_external_interrupt(0);
+        } else {
+            system->clear_supervisor_external_interrupt(0);
+        }
+    }
+
+    const std::vector<PLIC_Interrupt_Target> &get_target_list() const override {
+        static const std::vector<PLIC_Interrupt_Target> targets = {
+            // name_id, address_id, notify callback
+            // Context 0 = M-mode, Context 1 = S-mode
+            {0, 0, Target_Machine_external_interrupt},
+            {1, 1, Target_Supervisor_external_interrupt},
         };
         return targets;
     }
