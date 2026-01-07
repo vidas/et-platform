@@ -35,6 +35,7 @@ namespace bemu {
 
 #define EMU_HAS_WDT 1
 #define EMU_HAS_RVTIMER 1
+#define EMU_PLIC_SPEC_1_0_0 1
 #define EMU_HAS_L2 0
 #define EMU_HAS_SVCPROC 0
 #define EMU_HAS_MEMSHIRE 0
@@ -75,6 +76,7 @@ namespace bemu {
 #define EMU_HAS_SVCPROC 1
 #define EMU_HAS_SPIO 1
 #define EMU_HAS_PU 1
+#define EMU_PLIC_SPEC_1_0_0 0
 
 #define EMU_IO_SHIRE_SP         (EMU_NUM_SHIRES - 1)
 #define EMU_IO_SHIRE_SP_THREAD  (EMU_NUM_THREADS - 1)

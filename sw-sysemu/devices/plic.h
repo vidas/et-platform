@@ -16,6 +16,7 @@
 #include <vector>
 #include <unistd.h>
 
+#include "emu_defines.h"
 #include "memory/memory_error.h"
 #include "memory/memory_region.h"
 #include "system.h"
@@ -205,11 +206,15 @@ private:
 
         if ((pos % 0x1000) == 0) { // Threshold registers
             *result32 = threshold[name_id];
-        } else if ((pos % 0x1000) == 4) { // MaxID registers
+        } else if ((pos % 0x1000) == 4) { // Claim/Complete registers
             // Read current MaxID
             *result32 = max_id[name_id];
-            // To claim an interrupt, the target reads its MaxID register
+            // To claim an interrupt, the target reads its Claim register
             if (max_id[name_id] > 0) {
+#if EMU_PLIC_SPEC_1_0_0
+                // RISC-V PLIC 1.0.0: Clear IP bit on claim
+                ip[max_id[name_id]] = false;
+#endif
                 in_flight[max_id[name_id]] = true;
                 // Save the ID of the Target that claimed the source interrupt
                 in_flight_by[max_id[name_id]] = name_id;
