@@ -5,6 +5,7 @@
 
 #include "memory/erbium/main_memory.h"
 #include "emu_defines.h"
+#include "devices/plic.h"
 #include "devices/sysregs_er.h"
 #include "system.h"
 #include "memory/sysreg_region.h"
@@ -19,6 +20,7 @@ void MainMemory::reset()
     regions[sram_idx].reset(new DenseRegion<region_bases[sram_idx], region_sizes[sram_idx]>());
     regions[dram_idx].reset(new DenseRegion<region_bases[dram_idx], region_sizes[dram_idx]>());
     regions[sysreg_idx].reset(new SysregRegion<region_bases[sysreg_idx], region_sizes[sysreg_idx]>());
+    regions[plic_idx].reset(new ER_PLIC<region_bases[plic_idx], region_sizes[plic_idx]>());
 }
 
 void MainMemory::wdt_clock_tick(const Agent& agent, uint64_t cycle)
@@ -58,6 +60,18 @@ void MainMemory::rvtimer_write_mtimecmp(const Agent& agent, uint64_t value) {
 
 void MainMemory::rvtimer_reset() {
     rvtimer().reset();
+}
+ 
+void MainMemory::plic_interrupt_pending_set(const Agent& agent, uint32_t source)
+{
+    auto ptr = dynamic_cast<ER_PLIC<region_bases[plic_idx], region_sizes[plic_idx]>*>(regions[plic_idx].get());
+    ptr->interrupt_pending_set(agent, source);
+}
+ 
+void MainMemory::plic_interrupt_pending_clear(const Agent& agent, uint32_t source)
+{
+    auto ptr = dynamic_cast<ER_PLIC<region_bases[plic_idx], region_sizes[plic_idx]>*>(regions[plic_idx].get());
+    ptr->interrupt_pending_clear(agent, source);
 }
  
 } // namespace bemu
