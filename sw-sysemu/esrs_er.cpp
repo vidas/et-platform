@@ -731,12 +731,11 @@ void System::write_minion_feature(unsigned shire, uint8_t value)
 }
 
 
-void System::write_icache_prefetch(Privilege /*privilege*/, unsigned shire, uint64_t value)
+void System::write_icache_prefetch(Privilege /*privilege*/, unsigned shire, uint64_t /*value*/)
 {
     assert(shire <= EMU_NUM_COMPUTE_SHIRES);
 #ifdef SYS_EMU
     (void)(shire);
-    (void)(value);
 #else
     if (!shire_other_esrs[shire].icache_prefetch_active) {
         bool active = shire_other_esrs[shire].shire_coop_mode;
