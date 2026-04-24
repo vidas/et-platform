@@ -1,0 +1,4 @@
+# Default output directory from scripts/test_histogram.py etc.
+# (override with --output-dir; /tmp/hist-results is the convention
+# used in PLAN.md).
+scripts/results/
