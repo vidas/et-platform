@@ -158,3 +158,4 @@ endif()
 
 # Erbium-flavored test kernels.
 add_subdirectory(hart_id)
+add_subdirectory(histogram)
