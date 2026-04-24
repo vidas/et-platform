@@ -34,6 +34,18 @@ if (WITH_CM_UMODE)
     include(cm_umode.cmake)
 endif()
 
+option(WITH_ERBIUM_UMODE "Build erbium_umode component" ON)
+if (WITH_ERBIUM_UMODE)
+    # Build and install Erbium Minion User Mode libs
+    include(erbium_umode.cmake)
+endif()
+
+option(WITH_ERBIUM_SOC1SIM_UMODE "Build erbium_soc1sim_umode component" ON)
+if (WITH_ERBIUM_SOC1SIM_UMODE)
+    # Build and install Erbium-on-etsoc1 (soc1sim) User Mode libs
+    include(erbium_soc1sim_umode.cmake)
+endif()
+
 option(WITH_MINION_BL "Build minion_bl component" ON)
 if (WITH_MINION_BL)
     # Build and install Minion Bootloader lib for m-mode
