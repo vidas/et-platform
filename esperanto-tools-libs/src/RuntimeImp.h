@@ -52,7 +52,8 @@ public:
 
   DeviceProperties doGetDeviceProperties(DeviceId device) const final;
 
-  LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size) final;
+  LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size,
+                            std::byte* deviceBuffer = nullptr) final;
   void doUnloadCode(KernelId kernel) final;
 
   std::byte* doMallocDevice(DeviceId device, size_t size, uint32_t alignment = kCacheLineSize) final;
@@ -128,10 +129,11 @@ private:
   void onProfilerChanged() override;
 
   struct Kernel {
-    Kernel(DeviceId deviceId, std::byte* deviceBuffer, uint64_t entryPoint)
+    Kernel(DeviceId deviceId, std::byte* deviceBuffer, uint64_t entryPoint, bool ownsBuffer = true)
       : deviceId_(deviceId)
       , deviceBuffer_(deviceBuffer)
-      , entryPoint_(entryPoint) {
+      , entryPoint_(entryPoint)
+      , ownsBuffer_(ownsBuffer) {
       RT_VLOG(LOW) << std::hex << "Kernel loaded at device: " << static_cast<std::underlying_type_t<DeviceId>>(deviceId)
                    << " at address: " << deviceBuffer_ << " with entry point: " << entryPoint;
     }
@@ -146,6 +148,7 @@ private:
     DeviceId deviceId_;
     std::byte* deviceBuffer_;
     uint64_t entryPoint_;
+    bool ownsBuffer_;
   };
 
   struct DeviceFwTracing {

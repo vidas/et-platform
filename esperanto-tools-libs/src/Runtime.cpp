@@ -93,6 +93,17 @@ LoadCodeResult IRuntime::loadCode(StreamId stream, const std::byte* elf, size_t 
   return res;
 }
 
+LoadCodeResult IRuntime::loadCodeTo(StreamId stream, std::byte* deviceBuffer, const std::byte* elf, size_t elf_size) {
+  EASY_FUNCTION()
+  ScopedProfileEvent profileEvent(Class::LoadCode, *profiler_, stream);
+  auto res = doLoadCode(stream, elf, elf_size, deviceBuffer);
+  profileEvent.setEventId(res.event_);
+  profileEvent.setLoadAddress(reinterpret_cast<uint64_t>(res.loadAddress_));
+  profileEvent.setKernelId(res.kernel_);
+  profileEvent.recordNow();
+  return res;
+}
+
 EventId IRuntime::memcpyDeviceToHost(StreamId stream, const std::byte* d_src, std::byte* h_dst, size_t size,
                                      bool barrier, const CmaCopyFunction& cmaCopyFunction) {
   EASY_FUNCTION()

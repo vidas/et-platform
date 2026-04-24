@@ -25,7 +25,8 @@ public:
   void doFreeDevice(DeviceId device, std::byte* buffer) final;
   StreamId doCreateStream(DeviceId device) final;
   void doDestroyStream(StreamId stream) final;
-  LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size) final;
+  LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size,
+                            std::byte* deviceBuffer = nullptr) final;
   void doUnloadCode(KernelId kernel) final;
 
   EventId doKernelLaunch(StreamId stream, KernelId kernel, const std::byte* kernel_args, size_t kernel_args_size,

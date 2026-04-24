@@ -87,7 +87,7 @@ public:
   void destroyStream(StreamId stream);
 
   /// \brief Loads an elf into the device. The caller will provide a byte code containing the elf representation and its
-  /// size. Host memory.
+  /// size. Host memory. Memory for the code is allocated internally by the runtime.
   /// @param[in] stream handler indicating the stream used for the kernel loading.
   /// @param[in] elf a pointer to host memory containing the elf bytes
   /// @param[in] elf_size the elf size
@@ -97,6 +97,20 @@ public:
   ///
   /// NOTE: remember to not deallocate the elf memory \param elf until the EventId from \ref LoadCodeResult is completed
   LoadCodeResult loadCode(StreamId stream, const std::byte* elf, size_t elf_size);
+
+  /// \brief Loads an elf into a pre-allocated device buffer. The caller is responsible for allocating the buffer
+  /// with \ref mallocDevice and freeing it with \ref freeDevice after unloading the kernel. The buffer must be
+  /// large enough to hold the ELF code and data segments.
+  /// @param[in] stream handler indicating the stream used for the kernel loading.
+  /// @param[in] deviceBuffer a device memory pointer previously allocated with \ref mallocDevice
+  /// @param[in] elf a pointer to host memory containing the elf bytes
+  /// @param[in] elf_size the elf size
+  ///
+  /// @returns a \ref LoadCodeResult with the EventId to sync with (if needed), the kernelId to utilize in later
+  /// kernelLaunch and the kernel load address (same as deviceBuffer).
+  ///
+  /// NOTE: \ref unloadCode will NOT free the device buffer; the caller must free it with \ref freeDevice.
+  LoadCodeResult loadCodeTo(StreamId stream, std::byte* deviceBuffer, const std::byte* elf, size_t elf_size);
 
   /// \brief Unloads a previously loaded elf code, identified by the kernel handler
   ///
@@ -416,7 +430,8 @@ private:
 
   virtual DeviceProperties doGetDeviceProperties(DeviceId device) const = 0;
 
-  virtual LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size) = 0;
+  virtual LoadCodeResult doLoadCode(StreamId stream, const std::byte* elf, size_t elf_size,
+                                    std::byte* deviceBuffer = nullptr) = 0;
   virtual void doUnloadCode(KernelId kernel) = 0;
 
   virtual std::byte* doMallocDevice(DeviceId device, size_t size, uint32_t alignment = kCacheLineSize) = 0;

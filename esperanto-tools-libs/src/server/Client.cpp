@@ -512,7 +512,7 @@ std::vector<StreamError> Client::doRetrieveStreamErrors(StreamId st) {
   return errors;
 }
 
-LoadCodeResult Client::doLoadCode(StreamId st, std::byte const* data, unsigned long size) {
+LoadCodeResult Client::doLoadCode(StreamId st, std::byte const* data, unsigned long size, std::byte*) {
   auto payload = sendRequestAndWait(req::Type::LOAD_CODE, req::LoadCode{st, data, size});
   LoadCodeResult r;
   auto resp = std::get<resp::LoadCode>(payload);

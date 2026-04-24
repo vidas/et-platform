@@ -229,7 +229,8 @@ DeviceProperties RuntimeImp::doGetDeviceProperties(DeviceId device) const {
   return prop;
 }
 
-LoadCodeResult RuntimeImp::doLoadCode(StreamId stream, const std::byte* data, size_t size) {
+LoadCodeResult RuntimeImp::doLoadCode(StreamId stream, const std::byte* data, size_t size,
+                                      std::byte* preAllocatedBuffer) {
   SpinLock lock(mutex_);
 
   auto stInfo = streamManager_.getStreamInfo(stream);
@@ -247,10 +248,10 @@ LoadCodeResult RuntimeImp::doLoadCode(StreamId stream, const std::byte* data, si
 
   auto [elfBaseAddr, extraSize] = getELFBaseAddr(elf);
 
-  // we need to add all the diff between fileSize and memSize to the final size
-  // allocate a buffer in the device to load the code
-
-  auto deviceBuffer = doMallocDevice(DeviceId{stInfo.device_}, size + extraSize, kCacheLineSize);
+  bool ownsBuffer = (preAllocatedBuffer == nullptr);
+  auto deviceBuffer = ownsBuffer
+    ? doMallocDevice(DeviceId{stInfo.device_}, size + extraSize, kCacheLineSize)
+    : preAllocatedBuffer;
 
   // Handle the elf relocations
   relocateELF(deviceBuffer, elf, elfContents, elfBaseAddr);
@@ -299,7 +300,7 @@ LoadCodeResult RuntimeImp::doLoadCode(StreamId stream, const std::byte* data, si
     throw Exception("Error calculating kernel entrypoint");
   }
 
-  auto kernel = std::make_unique<Kernel>(DeviceId{stInfo.device_}, deviceBuffer, entry - basePhysicalAddress);
+  auto kernel = std::make_unique<Kernel>(DeviceId{stInfo.device_}, deviceBuffer, entry - basePhysicalAddress, ownsBuffer);
 
   // store the ref
   auto kernelId = static_cast<KernelId>(nextKernelId_++);
@@ -329,11 +330,14 @@ void RuntimeImp::doUnloadCode(KernelId kernel) {
   auto it = find(kernels_, kernel);
   auto deviceId = it->second->deviceId_;
   auto deviceBuffer = it->second->deviceBuffer_;
+  auto ownsBuffer = it->second->ownsBuffer_;
   RT_VLOG(LOW) << "Unloading kernel from deviceId " << static_cast<std::underlying_type_t<DeviceId>>(deviceId)
                << " buffer: " << deviceBuffer;
 
-  // free the buffer
-  doFreeDevice(deviceId, it->second->deviceBuffer_);
+  // only free the buffer if the kernel owns it
+  if (ownsBuffer) {
+    doFreeDevice(deviceId, deviceBuffer);
+  }
 
   // and remove the kernel
   kernels_.erase(it);
