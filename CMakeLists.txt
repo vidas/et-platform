@@ -104,3 +104,8 @@ HostProject(dnn-library-api "-DENABLE_WARNINGS_AS_ERRORS=OFF"
 #
 HostProject(devicemanagement "" device-api common-sw devicelayer device-bootloaders)
 HostProject(device-management-application "" common-sw g3log devicelayer devicemanagement et-trace)
+
+#
+# SoC1 simulator launcher
+#
+HostProject(soc1sim "" common-sw devicelayer esperanto-tools-libs sw-sysemu)
