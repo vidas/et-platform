@@ -87,7 +87,7 @@ MAGIC = 0xE0B10157
 # ------------------------------------------------------------------
 # Defaults
 # ------------------------------------------------------------------
-DEFAULT_LAUNCHER = Path("erbium_run")
+DEFAULT_LAUNCHER = "erbium_run"
 
 # Per-device default ELF paths.
 DEFAULT_ELFS = {
@@ -138,7 +138,7 @@ def save_image_png(img: np.ndarray, path: Path) -> None:
 # Launcher invocation
 # ------------------------------------------------------------------
 def run_launcher(
-    launcher: Path,
+    launcher: str,
     elf: Path,
     image_bin: Path,
     dump_after: Path,
@@ -148,7 +148,7 @@ def run_launcher(
     extra: list[str] | None = None,
 ) -> int:
     cmd = [
-        str(launcher),
+        launcher,
         "--device", device,
         "--elf-load",
         str(elf),
@@ -377,7 +377,7 @@ def main() -> int:
                     choices=["soc1sim", "sys_emu", "erbium_emu"],
                     default="soc1sim",
                     help="target device (default: soc1sim)")
-    ap.add_argument("--launcher", type=Path, default=DEFAULT_LAUNCHER,
+    ap.add_argument("--launcher", type=str, default=DEFAULT_LAUNCHER,
                     help=f"path to erbium_run wrapper (default: {DEFAULT_LAUNCHER})")
     ap.add_argument("--elf", type=Path, default=None,
                     help="path to histogram.elf (default: auto per --device)")
@@ -399,14 +399,9 @@ def main() -> int:
 
     elf = args.elf or DEFAULT_ELFS.get(args.device, DEFAULT_ELFS["soc1sim"])
 
-    if not args.launcher.exists():
-        print(f"error: launcher not found at {args.launcher}", file=sys.stderr)
-        return 1
     if not elf.exists():
-        backend = "erbium" if args.device == "erbium_emu" else "soc1sim"
-        soc1sim_flag = "OFF" if args.device == "erbium_emu" else "ON"
         print(f"error: histogram.elf not found at {elf}\n"
-              f"       build it first,"
+              f"       build it first",
               file=sys.stderr)
         return 1
 

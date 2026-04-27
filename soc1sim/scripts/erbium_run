@@ -52,7 +52,7 @@ SYS_EMU_FIRMWARE = [
     "lib/esperanto-fw/WorkerMinion/WorkerMinion.elf",
 ]
 
-DEFAULT_LAUNCHER  = Path(__file__).resolve().parent.parent / "build" / "erbium_soc1sim"
+DEFAULT_LAUNCHER  = "erbium_soc1sim"
 DEFAULT_ET_PLATFORM_PATH = Path(os.environ.get("ET_PLATFORM", "/opt/et"))
 DEFAULT_MAX_CYCLES = 100_000_000
 
@@ -101,9 +101,6 @@ def elf_entry_point(path: Path) -> int:
 
 def run_soc1sim(args, file_loads: list[tuple[int, str]], extra: list[str]) -> int:
     launcher = args.launcher or DEFAULT_LAUNCHER
-    if not launcher.exists():
-        return die(f"soc1sim launcher not found: {launcher}")
-
     cmd = [str(launcher), "--elf-load", str(args.elf_load)]
     if args.shire is not None:
         cmd += ["--shire", str(args.shire)]
@@ -128,9 +125,6 @@ def run_sys_emu(args, file_loads: list[tuple[int, str]], extra: list[str]) -> in
     # sys_emu is driven through the same C++ launcher as soc1sim,
     # just with --device sys_emu (swaps PCIe for emulator device layer).
     launcher = args.launcher or DEFAULT_LAUNCHER
-    if not launcher.exists():
-        return die(f"soc1sim launcher not found: {launcher}")
-
     cmd = [str(launcher), "--device", "sys_emu",
            "--elf-load", str(args.elf_load)]
     if args.shire is not None:
@@ -217,7 +211,7 @@ def main() -> int:
     g = ap.add_argument_group("soc1sim options")
     g.add_argument("--shire", type=int, default=None,
                    help="shire ID (default: 0)")
-    g.add_argument("--launcher", type=Path, default=None,
+    g.add_argument("--launcher", type=str, default=None,
                    help="override erbium_soc1sim path")
 
     g = ap.add_argument_group("emulator options (sys_emu / erbium_emu)")
