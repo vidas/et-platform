@@ -87,7 +87,7 @@ MAGIC = 0xE0B10157
 # ------------------------------------------------------------------
 # Defaults
 # ------------------------------------------------------------------
-DEFAULT_LAUNCHER = Path("erbium-run")
+DEFAULT_LAUNCHER = Path("erbium_run")
 
 # Per-device default ELF paths.
 DEFAULT_ELFS = {
@@ -378,7 +378,7 @@ def main() -> int:
                     default="soc1sim",
                     help="target device (default: soc1sim)")
     ap.add_argument("--launcher", type=Path, default=DEFAULT_LAUNCHER,
-                    help=f"path to erbium-run wrapper (default: {DEFAULT_LAUNCHER})")
+                    help=f"path to erbium_run wrapper (default: {DEFAULT_LAUNCHER})")
     ap.add_argument("--elf", type=Path, default=None,
                     help="path to histogram.elf (default: auto per --device)")
     ap.add_argument("--image", type=Path, default=None,

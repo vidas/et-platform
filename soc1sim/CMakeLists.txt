@@ -38,6 +38,6 @@ install(TARGETS erbium_soc1sim
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(PROGRAMS scripts/erbium-run
+install(PROGRAMS scripts/erbium_run
     DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

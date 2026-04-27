@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Ainekko, Co.
 # SPDX-License-Identifier: Apache-2.0
 """
-erbium-run -- Unified launcher for Erbium compute kernels.
+erbium_run -- Unified launcher for Erbium compute kernels.
 
 Runs an Erbium kernel ELF on one of three backends:
 
@@ -18,10 +18,10 @@ Note: soc1sim and sys_emu expect a soc1sim-compiled ELF; erbium_emu
 expects a native-erbium-compiled ELF.
 
 Examples:
-  erbium-run --elf-load histogram.elf
-  erbium-run --elf-load histogram.elf --device sys_emu --dump_after dump.bin
-  erbium-run --elf-load histogram.elf --device erbium_emu -v
-  erbium-run --device sys_emu --elf-load k.elf -- -mem_check -Werror
+  erbium_run --elf-load histogram.elf
+  erbium_run --elf-load histogram.elf --device sys_emu --dump_after dump.bin
+  erbium_run --elf-load histogram.elf --device erbium_emu -v
+  erbium_run --device sys_emu --elf-load k.elf -- -mem_check -Werror
 """
 
 from __future__ import annotations
@@ -198,7 +198,7 @@ def main() -> int:
     import argparse
 
     ap = argparse.ArgumentParser(
-        prog="erbium-run",
+        prog="erbium_run",
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
