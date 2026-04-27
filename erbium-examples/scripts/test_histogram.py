@@ -101,7 +101,6 @@ DEFAULT_ELFS = {
 # resized to IMG_W x IMG_H grayscale by load_image().
 TESTDATA_DIR = Path(__file__).resolve().parent.parent / "testdata"
 PRESETS = {
-    "lena":    TESTDATA_DIR / "lena.jpg",
     "baboon":  TESTDATA_DIR / "baboon.jpg",
     "peppers": TESTDATA_DIR / "peppers.jpg",
     "aero":    TESTDATA_DIR / "aero1.jpg",

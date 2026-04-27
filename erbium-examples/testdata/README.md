@@ -7,7 +7,6 @@ expects (256x256 for `histogram.elf` today).
 
 | File         | Native size | Source URL |
 |--------------|-------------|------------|
-| lena.jpg     | 512x512     | https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg |
 | baboon.jpg   | 512x512     | https://raw.githubusercontent.com/opencv/opencv/master/samples/data/baboon.jpg |
 | peppers.jpg  | 512x480     | https://raw.githubusercontent.com/opencv/opencv/master/samples/data/fruits.jpg |
 | aero1.jpg    | 640x480     | https://raw.githubusercontent.com/opencv/opencv/master/samples/data/aero1.jpg |
@@ -18,6 +17,6 @@ you'd like a fresh copy, re-run:
 
 ```bash
 cd erbium-examples/testdata
-curl -LO https://raw.githubusercontent.com/opencv/opencv/master/samples/data/lena.jpg
+curl -LO https://raw.githubusercontent.com/opencv/opencv/master/samples/data/baboon.jpg
 # (repeat with the other URLs from the table)
 ```
