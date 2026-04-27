@@ -43,7 +43,7 @@ DEVICE_BUFFER_SIZE = 16 * 1024 * 1024  # 16 MB -- matches kErbiumMemSize
 REGION0_BASE_SOC1SIM = 0x80_0580_1000   # soc1sim: ET-SoC-1 DRAM region0
 MRAM_BASE_ERBIUM     = 0x00_4000_0000   # native erbium: MRAM
 
-# Firmware ELFs required by sys_emu, relative to toolchain root.
+# Firmware ELFs required by sys_emu, relative to ET platform root.
 SYS_EMU_FIRMWARE = [
     "lib/esperanto-fw/BootromTrampolineToBL2/BootromTrampolineToBL2.elf",
     "lib/esperanto-fw/ServiceProcessorBL2/fast-boot/ServiceProcessorBL2_fast-boot.elf",
@@ -53,10 +53,7 @@ SYS_EMU_FIRMWARE = [
 ]
 
 DEFAULT_LAUNCHER  = Path(__file__).resolve().parent.parent / "build" / "erbium_soc1sim"
-DEFAULT_TOOLCHAIN = Path(
-    os.environ.get("ET_TOOLCHAIN",
-                   os.environ.get("TOOLCHAIN_ROOT", "/opt/et"))
-)
+DEFAULT_ET_PLATFORM_PATH = Path(os.environ.get("ET_PLATFORM", "/opt/et"))
 DEFAULT_MAX_CYCLES = 100_000_000
 
 
@@ -232,9 +229,9 @@ def main() -> int:
                    help="enable both threads per minion (default: single)")
     g.add_argument("--emulator", type=Path, default=None,
                    help="override emulator executable path")
-    g.add_argument("--toolchain", type=Path, default=None,
-                   help="ET toolchain root for firmware "
-                        f"(default: ${DEFAULT_TOOLCHAIN})")
+    g.add_argument("--et-platform-path", type=Path, default=None,
+                   help="ET platform root for firmware "
+                        f"(default: {DEFAULT_ET_PLATFORM_PATH})")
 
     g = ap.add_argument_group("general")
     g.add_argument("-v", "--verbose", action="store_true",

@@ -44,7 +44,7 @@ struct Options {
   uint32_t shire_id = 0;
   uint64_t timeout_secs = 60;
   Device device = Device::soc1sim;
-  std::string toolchain_path;
+  std::string et_platform_path;
 };
 
 std::string get_et_platform_path() {
@@ -190,7 +190,7 @@ emu::SysEmuOptions make_sysemu_options() {
                         o.workerMinionElfPath, o.executablePath}) {
     if (!std::filesystem::exists(p)) {
       std::cerr << "Error: sys_emu firmware not found: " << p << "\n"
-                << "       Set ET_PLATFORM to the installed toolchain root.\n";
+                << "       Set ET_PLATFORM to the installed ET platform root.\n";
       std::exit(1);
     }
   }
