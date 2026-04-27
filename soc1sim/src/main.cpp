@@ -50,7 +50,7 @@ struct Options {
 std::string get_et_platform_path() {
   if (const char* v = std::getenv("ET_PLATFORM"))
     return v;
-  return "/opt/et";
+  return ET_PLATFORM_INSTALL_PREFIX;
 }
 
 void print_usage(const char* prog) {
@@ -68,7 +68,8 @@ void print_usage(const char* prog) {
       << "  --timeout <secs>        Kernel timeout in seconds (default: 60, 0 = wait indefinitely)\n"
       << "  -h, --help              Show this message\n\n"
       << "Environment:\n"
-      << "  ET_PLATFORM             Toolchain root for firmware (default: /opt/et)\n";
+      << "  ET_PLATFORM             Toolchain root for firmware (default: "
+      << ET_PLATFORM_INSTALL_PREFIX << ")\n";
 }
 
 Options parse_args(int argc, char** argv) {

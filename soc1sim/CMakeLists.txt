@@ -29,6 +29,11 @@ target_link_libraries(erbium_soc1sim
         sw-sysemu::sw-sysemu
 )
 
+target_compile_definitions(erbium_soc1sim
+    PRIVATE
+        ET_PLATFORM_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+)
+
 install(TARGETS erbium_soc1sim
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
