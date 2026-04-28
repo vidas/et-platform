@@ -20,10 +20,38 @@
 #define _ERBIUM_SOC1SIM_ISA_LAYOUT_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Compile-time region bases / sizes — NOT defined on the soc1sim
+ * backend. The native-erbium side aliases these onto hwinc/top.h
+ * symbols (LAYOUT_MAIN_MEM_BASE = ERBIUM_TOP_MRAM_BASE etc); on
+ * soc1sim there is no equivalent because the kernel is loaded into
+ * an etsoc1 DDR region whose absolute address is firmware-policy
+ * (varies across launches), and there is no SRAM/BOOTROM/ESR-base
+ * concept the kernel could meaningfully address.
+ *
+ * Kernels are expected to walk __heap_regions[] for memory; any
+ * direct reference to LAYOUT_* on this backend triggers a hard
+ * compile error with the message below. */
+#define _ERBIUM_SOC1SIM_LAYOUT_NOT_DEFINED                                   \
+    "LAYOUT_*_BASE / LAYOUT_*_SIZE are not defined on the erbium-soc1sim "   \
+    "backend; walk __heap_regions[] for usable memory instead"
+
+extern uintptr_t _layout_unavailable(void)
+    __attribute__((error(_ERBIUM_SOC1SIM_LAYOUT_NOT_DEFINED)));
+
+#define LAYOUT_MAIN_MEM_BASE  _layout_unavailable()
+#define LAYOUT_MAIN_MEM_SIZE  _layout_unavailable()
+#define LAYOUT_SRAM_BASE      _layout_unavailable()
+#define LAYOUT_SRAM_SIZE      _layout_unavailable()
+#define LAYOUT_BOOTROM_BASE   _layout_unavailable()
+#define LAYOUT_BOOTROM_SIZE   _layout_unavailable()
+#define LAYOUT_ESR_BASE       _layout_unavailable()
+#define LAYOUT_ESR_SIZE       _layout_unavailable()
 
 typedef struct {
     void *start;

@@ -5,33 +5,25 @@
 */
 
 /*! \file cacheops-umode.h
-    \brief U-mode entry points for cache-maintenance ops that require
-    M-mode privilege on ET-SoC-1. Routes each call through an ecall
-    handled by the WorkerMinion firmware's syscall dispatcher.
+    \brief U-mode entry points for cache-maintenance ops on the
+    erbium-soc1sim backend.
 
-    Companion to <erbium/isa/cacheops.h>, which holds the ops that
-    are directly issuable from U-mode (VA-based evict/flush/prefetch
-    and the U-mode control CSRs). The ops here write CSRs or invoke
-    logic that is privileged on ET-SoC-1 and therefore wrapped.
-
-    Scope: only syscalls whose semantics are meaningful on **real
-    Erbium** (one shire / one neighborhood of L1 feeding directly
-    into MRAM) are exposed. Cross-shire / L2 / L3 / PMC syscalls
-    that WorkerMinion dispatches on ET-SoC-1 are deliberately NOT
-    surfaced here — using them would bake ET-SoC-1-specific
-    topology into kernels that are supposed to run on Erbium too.
-    Once Erbium grows a tiny M-mode shim that implements the same
-    syscall numbers, kernels using this header will port unchanged.
+    Self-contained: kernels that only run in U-mode include this
+    header and get the full surface (VA-based ops issued via direct
+    CSR writes + syscall wrappers for ops that require M-mode on
+    ET-SoC-1). Companion <erbium/isa/cacheops.h> targets M-mode
+    callers with direct CSR access to the privileged ops; the two
+    headers ship in different packages and are not mixed in the
+    same translation unit.
 
     Destination level: hidden from every signature — soc1sim pins
-    it to `CACHEOP_DST_L2` internally, mirroring the policy in
-    cacheops.h (see that file for the reasoning). On Erbium the
-    same numbers resolve to "memory" when the tiny M-mode shim
-    lands.
+    it to `CACHEOP_DST_L2` internally. On real Erbium the same
+    encoding resolves to "memory" (since erbium has no L2/L3 cache),
+    matching native erbium's hardcoded `CACHEOP_DST_MEM`.
 */
 
-#ifndef _ERBIUM_ISA_CACHEOPS_UMODE_H_
-#define _ERBIUM_ISA_CACHEOPS_UMODE_H_
+#ifndef _ERBIUM_SOC1SIM_ISA_CACHEOPS_UMODE_H_
+#define _ERBIUM_SOC1SIM_ISA_CACHEOPS_UMODE_H_
 
 #if defined(__cplusplus) && (__cplusplus >= 201103L)
 #include <cinttypes>
@@ -39,15 +31,173 @@
 #include <inttypes.h>
 #endif
 
-#include "erbium/isa/cacheops.h"  /* CACHEOP_DST_L2 */
+#include "erbium/isa/utils.h"     /* FENCE, WAIT_CACHEOPS */
 #include "erbium/isa/syscall.h"   /* SYSCALL_* numbers + syscall() */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* Destination level encoded in bits [59:58] of the cache-op CSRs.
+ * Mirrors the value defined in <erbium/isa/cacheops.h>; duplicated
+ * here so this header is self-contained — cacheops.h and
+ * cacheops-umode.h ship in different consumers and are not included
+ * in the same TU. */
+#define CACHEOP_DST_L2  0x1ULL
+
+/*! \enum l1d_mode
+    \brief L1 data cache configuration. */
+enum l1d_mode { l1d_shared, l1d_split, l1d_scp };
+
+/* --------------------------------------------------------------- */
+/* VA-based U-mode ops (CSRs 0x89f / 0x8bf / 0x81f / 0x8df / 0x8ff) */
+/* --------------------------------------------------------------- */
+
+static inline __attribute__((always_inline))
+void evict_va(uint64_t use_tmask, uint64_t addr,
+              uint64_t num_lines, uint64_t stride, uint64_t id)
+{
+    uint64_t csr_enc = ((use_tmask & 1) << 63) |
+                       (CACHEOP_DST_L2 << 58) |
+                       (addr & 0xFFFFFFFFFFC0ULL) |
+                       (num_lines & 0xF);
+
+    register uint64_t x31_enc asm("x31") =
+        (stride & 0xFFFFFFFFFFC0ULL) | (id & 0x1);
+
+    __asm__ __volatile__("csrw 0x89f, %[csr_enc]\n"
+                         :
+                         : [x31_enc] "r"(x31_enc),
+                           [csr_enc] "r"(csr_enc));
+}
+
+static inline __attribute__((always_inline))
+void evict_va_all(uint64_t use_tmask, uint64_t addr,
+                  uint64_t num_lines, uint64_t stride, uint64_t id)
+{
+    while (num_lines > 15)
+    {
+        evict_va(use_tmask, addr, 15, stride, id);
+        addr += (stride * 16);
+        num_lines -= 15;
+    }
+    evict_va(use_tmask, addr, num_lines, stride, id);
+}
+
+static inline __attribute__((always_inline))
+void evict(volatile const void *const address, uint64_t size)
+{
+    evict_va_all(0, (uint64_t)address,
+                 (((uint64_t)address & 0x3F) + size) >> 6, 64, 0);
+}
+
+static inline __attribute__((always_inline))
+void flush_va(uint64_t use_tmask, uint64_t addr,
+              uint64_t num_lines, uint64_t stride, uint64_t id)
+{
+    uint64_t csr_enc = ((use_tmask & 1) << 63) |
+                       (CACHEOP_DST_L2 << 58) |
+                       (addr & 0xFFFFFFFFFFC0ULL) |
+                       (num_lines & 0xF);
+
+    register uint64_t x31_enc asm("x31") =
+        (stride & 0xFFFFFFFFFFC0ULL) | (id & 0x1);
+
+    __asm__ __volatile__("csrw 0x8bf, %[csr_enc]\n"
+                         :
+                         : [x31_enc] "r"(x31_enc),
+                           [csr_enc] "r"(csr_enc));
+}
+
+static inline __attribute__((always_inline))
+void prefetch_va(uint64_t use_tmask, uint64_t addr,
+                 uint64_t num_lines, uint64_t stride, uint64_t id)
+{
+    uint64_t csr_enc = ((use_tmask & 1) << 63) |
+                       (CACHEOP_DST_L2 << 58) |
+                       (addr & 0xFFFFFFFFFFC0ULL) |
+                       (num_lines & 0xF);
+
+    register uint64_t x31_enc asm("x31") =
+        (stride & 0xFFFFFFFFFFC0ULL) | (id & 0x1);
+
+    __asm__ __volatile__("csrw 0x81f, %[csr_enc]\n"
+                         :
+                         : [x31_enc] "r"(x31_enc),
+                           [csr_enc] "r"(csr_enc));
+}
+
+static inline __attribute__((always_inline))
+void lock_va(uint64_t use_tmask, uint64_t addr, uint64_t num_lines,
+             uint64_t stride, uint64_t id)
+{
+    uint64_t csr_enc = ((use_tmask & 1) << 63) |
+                       (addr & 0xFFFFFFFFFFC0ULL) | (num_lines & 0xF);
+
+    register uint64_t x31_enc asm("x31") =
+        (stride & 0xFFFFFFFFFFC0ULL) | (id & 0x1);
+
+    __asm__ __volatile__("csrw 0x8df, %[csr_enc]\n"
+                         :
+                         : [x31_enc] "r"(x31_enc),
+                           [csr_enc] "r"(csr_enc));
+}
+
+static inline __attribute__((always_inline))
+void unlock_va(uint64_t use_tmask, uint64_t addr, uint64_t num_lines,
+               uint64_t stride, uint64_t id)
+{
+    uint64_t csr_enc = ((use_tmask & 1) << 63) |
+                       (addr & 0xFFFFFFFFFFC0ULL) | (num_lines & 0xF);
+
+    register uint64_t x31_enc asm("x31") =
+        (stride & 0xFFFFFFFFFFC0ULL) | (id & 0x1);
+
+    __asm__ __volatile__("csrw 0x8ff, %[csr_enc]\n"
+                         :
+                         : [x31_enc] "r"(x31_enc),
+                           [csr_enc] "r"(csr_enc));
+}
+
+/* --------------------------------------------------------------- */
+/* U-mode-accessible control (CSR 0x810)                            */
+/* --------------------------------------------------------------- */
+
+static inline __attribute__((always_inline))
+void ucache_control(uint64_t scp_en, uint64_t cacheop_rate, uint64_t cacheop_max)
+{
+    uint64_t csr_enc = ((cacheop_max  & 0x1F) << 6) |
+                       ((cacheop_rate & 0x7)  << 2) |
+                       ((scp_en       & 0x1)  << 1);
+
+    __asm__ __volatile__("csrw 0x810, %[csr_enc]\n" : : [csr_enc] "r"(csr_enc) : "x31");
+}
+
+static inline __attribute__((always_inline))
+enum l1d_mode get_l1d_mode(void)
+{
+    uint64_t csr_enc;
+    __asm__ __volatile__("csrr %[csr_enc], 0x810\n" : [csr_enc] "=r"(csr_enc) : :);
+
+    if ((csr_enc & 0x3) == 0x3)
+        return l1d_scp;
+    return ((csr_enc & 0x3) == 0x1) ? l1d_split : l1d_shared;
+}
+
+static inline __attribute__((always_inline))
+void scp(uint64_t warl, uint64_t DEscratchpad)
+{
+    FENCE;
+    WAIT_CACHEOPS;
+
+    uint64_t csr_enc = ((warl & 0x7FFFFFFFFFFFFFFF) << 1) | (DEscratchpad & 0x1);
+
+    __asm__ __volatile__("csrw 0x810, %[csr_enc]\n" : : [csr_enc] "r"(csr_enc) : "x31");
+}
+
 /* --------------------------------------------------------------- */
 /* Set/way ops (M-mode CSRs 0x7f9 / 0x7fb / 0x7fd / 0x7ff)          */
+/* Routed through the WorkerMinion firmware syscall dispatcher.     */
 /* --------------------------------------------------------------- */
 
 /*! \brief Evict a specific set/way from this hart's L1. num_lines
@@ -108,15 +258,8 @@ cache_invalidate(uint64_t inval_instr_cache, uint64_t inval_TLBs_and_PTW)
 }
 
 /*! \brief Re-configure this minion's L1 data cache: `d1_split`
- *         selects shared (0) vs split (1) mode (in split mode thread
- *         0 and thread 1 of the same minion don't alias each other);
- *         `scp_en` enables the scratchpad portion (requires split).
- *
- *  On ET-SoC-1 this requires the firmware-private CSR 0x7e0 and
- *  coordinated L1 drain/reconfigure, so it lands as a syscall (301)
- *  rather than a direct CSR write. Only arguments that make sense
- *  on Erbium are exposed; the etsoc mcache_control's
- *  `cacheop_rate` / `cacheop_max` fields are fixed by the firmware. */
+ *         selects shared (0) vs split (1) mode; `scp_en` enables
+ *         the scratchpad portion (requires split). */
 static inline __attribute__((always_inline)) int64_t
 set_l1_cache_control(uint64_t d1_split, uint64_t scp_en)
 {
@@ -128,19 +271,7 @@ set_l1_cache_control(uint64_t d1_split, uint64_t scp_en)
 /* --------------------------------------------------------------- */
 
 /*! \brief Evict every currently-active cache line from this hart's
- *         L1. The firmware-side implementation reads the current L1
- *         mode (shared / split / SCP) and loops set/way evictions
- *         over the right set ranges; it wraps the sequence in
- *         `excl_mode(1/0)` so interrupts can't interleave the
- *         multi-CSR sequence.
- *
- *  We don't expose an in-library reconstruction of this composite
- *  because (a) excl_mode isn't reachable from U-mode, and (b)
- *  doing it from C would take ~64 syscall round-trips per invocation
- *  versus 1 for the firmware-dispatched version.
- *
- *  `use_tmask` gates each potential line eviction by the TensorMask
- *  CSR when set. */
+ *         L1, gated by the TensorMask CSR if requested. */
 static inline __attribute__((always_inline)) int64_t
 evict_l1(uint64_t use_tmask)
 {
@@ -153,4 +284,4 @@ evict_l1(uint64_t use_tmask)
 }
 #endif
 
-#endif /* _ERBIUM_ISA_CACHEOPS_UMODE_H_ */
+#endif /* _ERBIUM_SOC1SIM_ISA_CACHEOPS_UMODE_H_ */

@@ -38,6 +38,43 @@
 extern "C" {
 #endif
 
+/* ---- M-mode-syscall entry points (not implemented on erbium) ----- */
+/*
+ * The soc1sim backend exposes M-mode cache ops to U-mode kernels via
+ * firmware syscalls (see erbium-soc1sim/isa/cacheops-umode.h). Native
+ * erbium has no M-mode firmware shim yet, so the matching surface is
+ * declared here only as compile-time-error stubs — kernels that want
+ * to be source-portable across both backends compile fine, and any
+ * actual call on the native-erbium build fails with a clear message.
+ */
+#define _ERBIUM_M_MODE_SYSCALL_NOT_IMPL                                     \
+    "M-mode cache op syscall not implemented on native erbium; "            \
+    "include <erbium/isa/cacheops.h> for direct CSR access from M-mode "    \
+    "code, or guard the call with a per-backend #ifdef"
+
+extern int64_t evict_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t flush_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t lock_sw(uint64_t way, uint64_t paddr)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t unlock_sw(uint64_t way, uint64_t set)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t cache_invalidate(uint64_t inval_instr_cache, uint64_t inval_TLBs_and_PTW)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t set_l1_cache_control(uint64_t d1_split, uint64_t scp_en)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+extern int64_t evict_l1(uint64_t use_tmask)
+    __attribute__((error(_ERBIUM_M_MODE_SYSCALL_NOT_IMPL)));
+
+#undef _ERBIUM_M_MODE_SYSCALL_NOT_IMPL
+
 /* Destination level for VA-based ops.  Native erbium has only L1
  * and MRAM, so everything targets memory. */
 #define CACHEOP_DST_MEM  0x3ULL

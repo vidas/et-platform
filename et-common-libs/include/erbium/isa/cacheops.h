@@ -60,10 +60,9 @@ enum l1d_mode { l1d_shared, l1d_split, l1d_scp };
 /* --------------------------------------------------------------- */
 
 static inline __attribute__((always_inline))
-void evict_sw(uint64_t use_tmask, uint64_t dst, uint64_t way,
-              uint64_t set, uint64_t num_lines)
+void evict_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
 {
-    uint64_t csr_enc = ((use_tmask & 1) << 63) | ((dst & 0x3) << 58) |
+    uint64_t csr_enc = ((use_tmask & 1) << 63) | (CACHEOP_DST_MEM << 58) |
                        ((set & 0xF) << 14) | ((way & 0x3) << 6) |
                        (num_lines & 0xF);
 
@@ -71,10 +70,9 @@ void evict_sw(uint64_t use_tmask, uint64_t dst, uint64_t way,
 }
 
 static inline __attribute__((always_inline))
-void flush_sw(uint64_t use_tmask, uint64_t dst, uint64_t way,
-              uint64_t set, uint64_t num_lines)
+void flush_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
 {
-    uint64_t csr_enc = ((use_tmask & 1) << 63) | ((dst & 0x3) << 58) |
+    uint64_t csr_enc = ((use_tmask & 1) << 63) | (CACHEOP_DST_MEM << 58) |
                        ((set & 0xF) << 14) | ((way & 0x3) << 6) |
                        (num_lines & 0xF);
 

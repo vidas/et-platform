@@ -35,6 +35,47 @@
 extern "C" {
 #endif
 
+/* ---- M-mode-only direct CSR ops -------------------------------- */
+/*
+ * These mirror the M-mode entry points in <erbium/isa/cacheops.h>
+ * for source-compatibility, but are not callable from a U-mode
+ * soc1sim kernel. Any reference triggers a hard compile error.
+ *
+ * U-mode kernels that need to invoke an M-mode cache op must include
+ * <erbium/isa/cacheops-umode.h> instead, which routes through a
+ * firmware syscall. The two headers are not mixed in the same TU.
+ */
+#define _SOC1SIM_M_MODE_NOT_HERE                                          \
+    "M-mode cache op not callable from soc1sim U-mode kernel; "           \
+    "include <erbium/isa/cacheops-umode.h> for the syscall wrapper instead"
+
+extern void evict_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void flush_sw(uint64_t use_tmask, uint64_t way, uint64_t set, uint64_t num_lines)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void lock_sw(uint64_t way, uint64_t paddr)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void unlock_sw(uint64_t way, uint64_t set)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void cache_invalidate(uint64_t inval_instr_cache, uint64_t inval_TLBs_and_PTW)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern uint64_t get_cache_invalidate(void)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void mcache_control(uint64_t d1_split, uint64_t scp_en,
+                           uint64_t cacheop_rate, uint64_t cacheop_max)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+extern void excl_mode(uint64_t val)
+    __attribute__((error(_SOC1SIM_M_MODE_NOT_HERE)));
+
+#undef _SOC1SIM_M_MODE_NOT_HERE
+
 /* Destination level encoded in bits [59:58] of the U-mode cache-op
  * CSR. On erbium-soc1sim we always target L2 — the cross-hart
  * shared level within the one neighborhood our kernels run in.
