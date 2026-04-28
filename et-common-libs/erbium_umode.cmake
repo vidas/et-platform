@@ -25,6 +25,8 @@ set(ERBIUM_UMODE_HDRS
     include/erbium/isa/sync.h
     include/erbium/isa/tensors.h
     include/erbium/isa/utils.h
+    # Erbium driver headers
+    include/erbium/drivers/ipi.h
 )
 
 # Listing of public headers that expose services provided by
