@@ -17,6 +17,13 @@
 set(ETSOC_DRIVERS_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/etsoc-drivers)
 
 set(ETSOC_DRIVERS_HDRS
+    # ETSoC1 driver headers
+    include/etsoc/drivers/ipi.h
+    include/etsoc/drivers/mprot.h
+    include/etsoc/drivers/plic.h
+    include/etsoc/drivers/thread.h
+    include/etsoc/drivers/timer.h
+    include/etsoc/drivers/uart.h
     # Shared helpers
     include/common/mmio.h
 )
