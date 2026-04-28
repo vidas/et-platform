@@ -12,11 +12,16 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <getopt.h>
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
+#include <thread>
+#include <unistd.h>
 #include <vector>
 
 #include <device-layer/IDeviceLayer.h>
@@ -24,6 +29,8 @@
 #include <runtime/IRuntime.h>
 #include <runtime/Types.h>
 #include <sw-sysemu/SysEmuOptions.h>
+
+#include "uart_bridge.h"
 
 namespace {
 
@@ -45,6 +52,8 @@ struct Options {
   uint64_t timeout_secs = 60;
   Device device = Device::soc1sim;
   std::string et_platform_path;
+  std::string uart_stdin;
+  std::string uart_stdout;
 };
 
 std::string get_et_platform_path() {
@@ -66,6 +75,8 @@ void print_usage(const char* prog) {
       << "  --dump_before <file>    Dump device memory to file before kernel launch\n"
       << "  --dump_after <file>     Dump device memory to file after kernel completes\n"
       << "  --timeout <secs>        Kernel timeout in seconds (default: 60, 0 = wait indefinitely)\n"
+      << "  --uart-stdin <file>     Feed file into the kernel's UART RX (fake-UART bridge)\n"
+      << "  --uart-stdout <file>    Capture kernel's UART TX into file (fake-UART bridge)\n"
       << "  -h, --help              Show this message\n\n"
       << "Environment:\n"
       << "  ET_PLATFORM             Toolchain root for firmware (default: "
@@ -81,6 +92,8 @@ Options parse_args(int argc, char** argv) {
       {"dump_before", required_argument, nullptr, 'b'},
       {"dump_after", required_argument, nullptr, 'a'},
       {"timeout", required_argument, nullptr, 't'},
+      {"uart-stdin", required_argument, nullptr, 'I'},
+      {"uart-stdout", required_argument, nullptr, 'O'},
       {"help", no_argument, nullptr, 'h'},
       {nullptr, 0, nullptr, 0},
   };
@@ -125,6 +138,12 @@ Options parse_args(int argc, char** argv) {
       break;
     case 't':
       opts.timeout_secs = std::stoull(optarg);
+      break;
+    case 'I':
+      opts.uart_stdin = optarg;
+      break;
+    case 'O':
+      opts.uart_stdout = optarg;
       break;
     case 'h':
       print_usage(argv[0]);
@@ -301,7 +320,8 @@ int main(int argc, char** argv) {
   kOpts.setBarrier(true);
   kOpts.setFlushL3(true);
 
-  runtime->kernelLaunch(stream, loadResult.kernel_, nullptr, 0, kOpts);
+  auto kernel_event = runtime->kernelLaunch(stream, loadResult.kernel_,
+                                            nullptr, 0, kOpts);
 
   std::cout << "Kernel launched, waiting for completion...\n";
 
@@ -309,7 +329,132 @@ int main(int argc, char** argv) {
       ? std::chrono::hours(24)
       : std::chrono::seconds(opts.timeout_secs);
 
-  if (!runtime->waitForStream(stream, timeout)) {
+  // If the user asked for fake-UART plumbing, locate the on-device
+  // ring header (via the kernel's .uart_ring section), open the
+  // input/output fds, and hand the loop over to the bridge. The
+  // bridge polls waitForEvent(kernel, 0s) between DMAs so we
+  // converge as soon as the kernel exits.
+  bool want_uart = !opts.uart_stdin.empty() || !opts.uart_stdout.empty();
+  if (want_uart) {
+    auto uart_off = erbium_launcher::findUartRingSectionInElf(
+        elf, reinterpret_cast<uintptr_t>(deviceBuf));
+    if (!uart_off) {
+      std::cerr << "warning: --uart-stdin/--uart-stdout requested but kernel "
+                << "has no .uart_ring section; falling back to magic scan\n";
+      uart_off = erbium_launcher::findUartHeaderByMagic(
+          *runtime, stream, deviceBuf, kErbiumMemSize);
+    }
+    if (!uart_off) {
+      std::cerr << "Error: could not locate UART ring in device buffer\n";
+      runtime->abortStream(stream);
+      return 1;
+    }
+
+    // Bridge DMAs need to run concurrently with the kernel; stream
+    // operations are serialized in submission order (barrier=true by
+    // default), so issuing the bridge's memcpys on `stream` would
+    // queue them behind the long-running kernelLaunch and starve.
+    // Run the bridge on its own stream.
+    auto uart_stream = runtime->createStream(device);
+
+    // The kernel hasn't necessarily run uart_init() yet -- we just
+    // launched it.  Poll the header until the magic appears or the
+    // kernel timeout elapses (whichever comes first).
+    std::optional<erbium_launcher::UartLocation> loc;
+    auto setup_deadline = std::chrono::steady_clock::now() + timeout;
+    while (true) {
+      loc = erbium_launcher::readAndValidateHeader(
+          *runtime, uart_stream, deviceBuf, kErbiumMemSize, *uart_off);
+      if (loc) break;
+      if (runtime->waitForEvent(kernel_event, std::chrono::seconds(0))) {
+        std::cerr << "Error: kernel completed before publishing UART magic\n";
+        return 1;
+      }
+      if (std::chrono::steady_clock::now() > setup_deadline) {
+        std::cerr << "Error: timed out waiting for kernel to publish UART magic\n";
+        runtime->abortStream(stream);
+        return 1;
+      }
+    }
+    std::cout << "uart_bridge: header at offset 0x" << std::hex
+              << loc->hdr_offset << " (TX cap=" << std::dec
+              << loc->tx_capacity << ", RX cap=" << loc->rx_capacity
+              << ")\n";
+
+    int in_fd            = -1;
+    int in_keepalive_fd  = -1;  // FIFO-only: holds a write-end open
+    int out_fd           = -1;
+    if (!opts.uart_stdin.empty()) {
+      in_fd = ::open(opts.uart_stdin.c_str(),
+                     O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+      if (in_fd < 0) {
+        std::cerr << "Error: cannot open --uart-stdin '"
+                  << opts.uart_stdin << "': " << std::strerror(errno)
+                  << "\n";
+        runtime->abortStream(stream);
+        return 1;
+      }
+      // For FIFOs the producer (e.g. test_uart_echo.py) connects after
+      // we open the read end.  Without a write-end held by us, a read()
+      // racing the producer's open returns 0 (EOF), which the bridge
+      // otherwise interprets as "input stream is done forever" -- the
+      // kernel then hangs in uart_rx_byte() waiting for bytes that
+      // never arrive.  Keep a write-end alive ourselves so the FIFO
+      // always has a writer; the bridge's loop terminates on the
+      // kernel event, not on input-side EOF.
+      struct stat st;
+      if (::fstat(in_fd, &st) == 0 && S_ISFIFO(st.st_mode)) {
+        in_keepalive_fd = ::open(opts.uart_stdin.c_str(),
+                                 O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+        // Best-effort: if this fails the bridge is no worse off than
+        // before, just exposed to the producer-timing race again.
+      }
+    } else {
+      // No input file: open /dev/null so reads always EOF immediately.
+      in_fd = ::open("/dev/null", O_RDONLY | O_CLOEXEC);
+    }
+    if (!opts.uart_stdout.empty()) {
+      out_fd = ::open(opts.uart_stdout.c_str(),
+                      O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+      if (out_fd < 0) {
+        std::cerr << "Error: cannot open --uart-stdout '"
+                  << opts.uart_stdout << "': " << std::strerror(errno)
+                  << "\n";
+        ::close(in_fd);
+        runtime->abortStream(stream);
+        return 1;
+      }
+    } else {
+      out_fd = STDOUT_FILENO;
+    }
+
+    erbium_launcher::UartBridge bridge(*runtime, uart_stream, deviceBuf, *loc,
+                                      in_fd, out_fd);
+
+    auto t0 = std::chrono::steady_clock::now();
+    auto deadline = t0 + timeout;
+    while (true) {
+      bridge.tick();
+      if (runtime->waitForEvent(kernel_event, std::chrono::seconds(0))) {
+        bridge.drainFinal();
+        break;
+      }
+      if (std::chrono::steady_clock::now() > deadline) {
+        std::cerr << "Error: kernel execution timed out (uart bridge)\n";
+        runtime->abortStream(stream);
+        if (in_fd           >= 0 && in_fd  != STDIN_FILENO)  ::close(in_fd);
+        if (in_keepalive_fd >= 0)                            ::close(in_keepalive_fd);
+        if (out_fd          >= 0 && out_fd != STDOUT_FILENO) ::close(out_fd);
+        return 1;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    if (in_fd           >= 0 && in_fd  != STDIN_FILENO)  ::close(in_fd);
+    if (in_keepalive_fd >= 0)                            ::close(in_keepalive_fd);
+    if (out_fd          >= 0 && out_fd != STDOUT_FILENO) ::close(out_fd);
+    runtime->destroyStream(uart_stream);
+  } else if (!runtime->waitForStream(stream, timeout)) {
     std::cerr << "Error: kernel execution timed out\n";
     runtime->abortStream(stream);
     return 1;

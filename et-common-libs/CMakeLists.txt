@@ -59,6 +59,12 @@ if (WITH_ERBIUM_SOC1SIM_UMODE)
     include(erbium_soc1sim_umode.cmake)
 endif()
 
+option(WITH_ERBIUM_SOC1SIM_DRIVERS "Build erbium-soc1sim peripheral driver headers" ON)
+if (WITH_ERBIUM_SOC1SIM_DRIVERS)
+    # Build and install soc1sim-backed Erbium peripheral drivers (fake UART, ...).
+    include(erbium_soc1sim_drivers.cmake)
+endif()
+
 option(WITH_MINION_BL "Build minion_bl component" ON)
 if (WITH_MINION_BL)
     # Build and install Minion Bootloader lib for m-mode

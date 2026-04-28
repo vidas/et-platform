@@ -20,7 +20,11 @@
 #include "erbium/boot.h"
 
   .section .mboot, "ax", @progbits
-  .global _boot
+  /* `_boot` is weak so a kernel that needs a different boot sequence
+   * (e.g., one that stays in M-mode to access the M-only UART/system
+   * register space) can ship its own strong `_boot` and the linker
+   * resolves to that. */
+  .weak _boot
 _boot:
   et_boot_init_mmode_csrs
   et_boot_set_per_hart_stack

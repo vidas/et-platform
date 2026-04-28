@@ -110,6 +110,10 @@ def run_soc1sim(args, file_loads: list[tuple[int, str]], extra: list[str]) -> in
         cmd += ["--dump_before", str(args.dump_before)]
     if args.dump_after:
         cmd += ["--dump_after", str(args.dump_after)]
+    if args.uart_stdin:
+        cmd += ["--uart-stdin", str(args.uart_stdin)]
+    if args.uart_stdout:
+        cmd += ["--uart-stdout", str(args.uart_stdout)]
     cmd += extra
 
     if args.verbose:
@@ -135,6 +139,10 @@ def run_sys_emu(args, file_loads: list[tuple[int, str]], extra: list[str]) -> in
         cmd += ["--dump_before", str(args.dump_before)]
     if args.dump_after:
         cmd += ["--dump_after", str(args.dump_after)]
+    if args.uart_stdin:
+        cmd += ["--uart-stdin", str(args.uart_stdin)]
+    if args.uart_stdout:
+        cmd += ["--uart-stdout", str(args.uart_stdout)]
     cmd += extra
 
     if args.verbose:
@@ -174,6 +182,15 @@ def run_erbium_emu(args, file_loads: list[tuple[int, str]], extra: list[str]) ->
                 "-dump_size", str(DEVICE_BUFFER_SIZE),
                 "-dump_file", str(args.dump_after)]
 
+    # UART plumbing — erbium_emu has built-in stdin/stdout file mux on
+    # the Shakti UART. We pass the user-facing --uart-stdin/--uart-stdout
+    # paths through verbatim. Omitting them keeps erbium_emu's defaults
+    # (real stdin/stdout).
+    if args.uart_stdin:
+        cmd += ["-uart_rx_file", str(args.uart_stdin)]
+    if args.uart_stdout:
+        cmd += ["-uart_tx_file", str(args.uart_stdout)]
+
     cmd += extra
 
     if args.verbose:
@@ -207,6 +224,12 @@ def main() -> int:
                     help="dump 16 MB device memory before launch")
     ap.add_argument("--dump_after", type=Path, default=None,
                     help="dump 16 MB device memory after completion")
+
+    g = ap.add_argument_group("UART (kernel stdio over <erbium/drivers/uart.h>)")
+    g.add_argument("--uart-stdin", type=Path, default=None,
+                   help="path to feed into the kernel's UART RX")
+    g.add_argument("--uart-stdout", type=Path, default=None,
+                   help="path to receive the kernel's UART TX")
 
     g = ap.add_argument_group("soc1sim options")
     g.add_argument("--shire", type=int, default=None,

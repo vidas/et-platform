@@ -9,7 +9,7 @@
 # wrapper that adds erbium_emu support and offset->address translation.
 #
 
-add_executable(erbium_launcher main.cpp)
+add_executable(erbium_launcher main.cpp uart_bridge.cpp)
 
 target_link_libraries(erbium_launcher
     PRIVATE

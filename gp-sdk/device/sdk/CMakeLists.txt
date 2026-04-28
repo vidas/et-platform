@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 
-find_package(et-common-libs REQUIRED COMPONENTS cm-umode erbium-umode erbium-soc1sim)
+find_package(et-common-libs REQUIRED COMPONENTS cm-umode erbium-umode erbium-drivers erbium-soc1sim erbium-soc1sim-drivers)
 find_package(dnnLibrary REQUIRED)
 
 add_library(etsoc_crt0 STATIC
@@ -118,7 +118,11 @@ add_library(erbium_crt0 STATIC
   lib/erbium/crt.S
   lib/erbium/layout.c
 )
-target_link_libraries(erbium_crt0 PUBLIC et-common-libs::erbium-umode)
+target_link_libraries(erbium_crt0
+  PUBLIC
+    et-common-libs::erbium-umode
+    et-common-libs::erbium-drivers
+)
 set_target_properties(erbium_crt0 PROPERTIES
   ERBIUM_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/lib/erbium/erbium.ld"
 )
@@ -127,8 +131,13 @@ add_library(erbium_soc1sim_crt0 STATIC
   lib/erbium-soc1sim/boot.S
   lib/erbium-soc1sim/crt.S
   lib/erbium-soc1sim/layout.c
+  lib/erbium-soc1sim/uart_storage.c
 )
-target_link_libraries(erbium_soc1sim_crt0 PUBLIC et-common-libs::erbium-soc1sim)
+target_link_libraries(erbium_soc1sim_crt0
+  PUBLIC
+    et-common-libs::erbium-soc1sim
+    et-common-libs::erbium-soc1sim-drivers
+)
 set_target_properties(erbium_soc1sim_crt0 PROPERTIES
   ERBIUM_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/lib/erbium-soc1sim/erbium.ld"
 )

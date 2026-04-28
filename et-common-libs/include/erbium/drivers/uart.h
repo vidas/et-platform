@@ -83,13 +83,32 @@ bool uart_rx_ready(void)
 static inline __attribute__((always_inline))
 uint8_t uart_rx_byte(void)
 {
+    while (!shakti_uart_rx_ready(ERBIUM_UART0_BASE)) { /* spin */ }
     return shakti_uart_rx_byte(ERBIUM_UART0_BASE);
 }
 
 static inline __attribute__((always_inline))
 void uart_tx_byte(uint8_t c)
 {
+    while (!shakti_uart_tx_ready(ERBIUM_UART0_BASE)) { /* spin */ }
     shakti_uart_tx_byte(ERBIUM_UART0_BASE, c);
+}
+
+/* Lifecycle helpers — match the surface exposed by the
+ * erbium-soc1sim fake-UART driver so the same kernel source compiles
+ * unchanged against either backend. uart_init() opens the pinmux
+ * gate; uart_exit() drains the TX FIFO before the kernel returns. */
+
+static inline __attribute__((always_inline))
+void uart_init(void)
+{
+    uart_enable_pinmux();
+}
+
+static inline __attribute__((always_inline))
+void uart_exit(void)
+{
+    while (!shakti_uart_tx_empty(ERBIUM_UART0_BASE)) { /* spin */ }
 }
 
 #ifdef __cplusplus

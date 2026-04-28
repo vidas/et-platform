@@ -106,6 +106,19 @@ SECTIONS {
         PROVIDE(__stack_base = .);
     } > MRAM
 
+    /* Fake-UART ring region (header + TX + RX). Storage is provided
+     * by gp-sdk/device/sdk/lib/erbium-soc1sim/uart_storage.c via the
+     * `.uart_ring` section attribute; the launcher locates it at
+     * runtime by scanning device DRAM for the magic in the header.
+     * If a kernel doesn't reference any uart_*() function the
+     * compiler-emitted symbol gets dropped by --gc-sections and this
+     * section ends up zero-sized. */
+    .uart_ring (NOLOAD) : ALIGN(64) {
+        PROVIDE(__uart_ring_start = .);
+        *(.uart_ring)
+        PROVIDE(__uart_ring_end = .);
+    } > MRAM
+
     /* heap0 = whatever's left in region 0 after code+stack.
      *
      * Placed inside its own NOLOAD output section bound to MRAM so
