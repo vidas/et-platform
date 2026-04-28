@@ -25,16 +25,6 @@ set(ERBIUM_UMODE_HDRS
     include/erbium/isa/sync.h
     include/erbium/isa/tensors.h
     include/erbium/isa/utils.h
-    # Erbium driver headers
-    include/erbium/drivers/ipi.h
-    include/erbium/drivers/mprot.h
-    include/erbium/drivers/plic.h
-    include/erbium/drivers/shakti_uart.h
-    include/erbium/drivers/thread.h
-    include/erbium/drivers/timer.h
-    include/erbium/drivers/uart.h
-    # Shared helpers
-    include/common/mmio.h
 )
 
 # Listing of public headers that expose services provided by
