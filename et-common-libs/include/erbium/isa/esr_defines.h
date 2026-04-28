@@ -6,30 +6,15 @@
 /*
  * Erbium ESR (Esperanto Special Register) address layout.
  *
- * TODO: THIS FILE IS TEMPORARY. Once the erbium HAL
- *       (hal/platform/erbium/hwinc/esr.h + esr_platform.h) stabilizes
- *       these hand-picked constants should be replaced by (thin
- *       wrappers around) the HAL definitions. Do not grow this file
- *       beyond what is strictly needed for fcc/flb/barriers; add new
- *       ESRs to the HAL instead and pull them from there.
- *
- * The registers we care about right now (FCC credit counters and
- * Fast Local Barriers) were transplanted in the RTL from the etsoc
- * shire-level ESR region into the erbium neighborhood's "User_cpu"
- * block, so their byte offsets within the block are identical but
- * the absolute address bit layout changed.
- *
- * Erbium address bit layout:
+ * Address bit layout:
  *     [31]     1    ESR space marker (set by region base below)
  *     [30:24]  shire id  (always 0 on erbium; exactly one shire)
  *     [23:22]  PP        (privilege: U=0, S=1, D=2, M=3)
- *     [21:0]   byte offset within the block (matches the sub-region
- *              byte offsets from the shire region in etsoc)
+ *     [21:0]   sub-region base | byte offset within block
  *
- * This header intentionally covers only FCC CREDINC and FLB. Other
- * ESR sub-regions will be added as needed. The hal/platform/erbium
- * tree has the full auto-generated definitions; we hand-pick to
- * avoid pulling in those (WIP) headers.
+ * Sub-region constants (ESR_SR_*) and the per-register byte offsets
+ * come from the HAL hwinc headers; this file just composes them via
+ * esr_addr() / esr_read_u64() / esr_write_u64() helpers.
  */
 
 #ifndef _ERBIUM_ISA_ESR_DEFINES_H_
@@ -44,7 +29,7 @@ extern "C" {
 #endif
 
 #include "hwinc/top.h"   /* ERBIUM_TOP_CPU_REGISTERS_BASE */
-#include "hwinc/esr.h"   /* USER_CPU_CREDINC*_BYTE_OFFSET, USER_CPU_FAST_LOCAL_BARRIER*_BYTE_OFFSET */
+#include "hwinc/esr.h"   /* per-register *_BYTE_OFFSET symbols */
 
 /* ---- privilege (PP) constants -------------------------------- */
 
@@ -87,13 +72,13 @@ extern "C" {
 #define ESR_REGION_PROT_SHIFT  22              /* PP        [23:22] */
 #define ESR_REGION_SHIRE_SHIFT 24              /* shire id  [30:24] */
 
-/* Sub-region bases within the 22-bit offset field [21:0].
- * These select which ESR block the register lives in. */
-#define ESR_SUBREGION_SHIRE    0x340000ULL     /* User_cpu / shire-level */
+/* Sub-region bases within the 22-bit offset field [21:0]. Pass one
+ * of these as the `subregion` argument to esr_addr/read/write. */
+#define ESR_SR_USER_CPU        0x340000ULL     /* User_cpu block (FCC, FLB, ...) */
+#define ESR_SR_MACHINE_CPU     0xF40000ULL     /* Machine_cpu block (IPI, ...) */
 
 /* Build an ESR address from (pp, shire, subregion, byte_offset).
- * `subregion` is the block base (e.g. ESR_SUBREGION_SHIRE for
- * FCC/FLB). `byte_offset` is the register offset within the block. */
+ * Macro form so it's usable from assembler as well. */
 #define ESR_ADDR(pp, shire, subregion, byte_offset)             \
     ((ESR_REGION) |                                             \
      ((uint64_t)((pp)    & 0x3ULL)  << ESR_REGION_PROT_SHIFT) | \
@@ -101,104 +86,30 @@ extern "C" {
      ((uint64_t)((subregion) & 0x3FFFFFULL)) |                  \
      ((uint64_t)((byte_offset) & 0xFFFFULL)))
 
-/* Drop-in replacement for etsoc's ESR_SHIRE(shire, NAME). Names
- * match their etsoc counterparts (FCC_CREDINC_*, FAST_LOCAL_BARRIER*)
- * so existing sync/FCC/barrier code ports with only a header swap. */
-#define ESR_SHIRE(shire, name)                                  \
-    ESR_ADDR(ESR_SHIRE_##name##_PROT, (shire),                  \
-             ESR_SUBREGION_SHIRE,                                \
-             ESR_SHIRE_##name##_BYTE_OFFSET)
+#ifndef __ASSEMBLER__
 
-/* ---- FCC credit-counter registers ---------------------------- */
-/* Four CREDINC registers, indexed (thread * 2 + fcc):
- *     CREDINC_0 -> thread 0, fcc 0
- *     CREDINC_1 -> thread 0, fcc 1
- *     CREDINC_2 -> thread 1, fcc 0
- *     CREDINC_3 -> thread 1, fcc 1
- * Same layout etsoc used — SEND_FCC's pointer arithmetic in fcc.h
- * works unchanged. */
+static inline __attribute__((always_inline))
+uint64_t esr_addr(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset)
+{
+    return ESR_ADDR(pp, shire, subregion, offset);
+}
 
-#define ESR_SHIRE_FCC_CREDINC_0_BYTE_OFFSET USER_CPU_CREDINC0_BYTE_OFFSET
-#define ESR_SHIRE_FCC_CREDINC_0_PROT        PRV_U
+static inline __attribute__((always_inline))
+uint64_t esr_read_u64(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset)
+{
+    return *(volatile uint64_t *)esr_addr(pp, shire, subregion, offset);
+}
 
-#define ESR_SHIRE_FCC_CREDINC_1_BYTE_OFFSET USER_CPU_CREDINC1_BYTE_OFFSET
-#define ESR_SHIRE_FCC_CREDINC_1_PROT        PRV_U
+static inline __attribute__((always_inline))
+void esr_write_u64(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset,
+                   uint64_t val)
+{
+    *(volatile uint64_t *)esr_addr(pp, shire, subregion, offset) = val;
+}
 
-#define ESR_SHIRE_FCC_CREDINC_2_BYTE_OFFSET USER_CPU_CREDINC2_BYTE_OFFSET
-#define ESR_SHIRE_FCC_CREDINC_2_PROT        PRV_U
+#endif /* !__ASSEMBLER__ */
 
-#define ESR_SHIRE_FCC_CREDINC_3_BYTE_OFFSET USER_CPU_CREDINC3_BYTE_OFFSET
-#define ESR_SHIRE_FCC_CREDINC_3_PROT        PRV_U
-
-/* ---- Fast Local Barriers (FLBs) ------------------------------ */
-/* 32 FLBs, each one 8 bytes wide, contiguous from 0x100. */
-
-#define ESR_SHIRE_FAST_LOCAL_BARRIER0_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER0_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER1_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER1_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER1_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER2_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER2_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER2_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER3_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER3_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER3_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER4_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER4_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER4_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER5_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER5_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER5_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER6_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER6_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER6_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER7_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER7_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER7_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER8_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER8_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER8_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER9_BYTE_OFFSET  USER_CPU_FAST_LOCAL_BARRIER9_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER9_PROT         PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER10_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER10_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER10_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER11_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER11_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER11_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER12_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER12_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER12_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER13_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER13_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER13_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER14_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER14_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER14_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER15_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER15_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER15_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER16_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER16_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER16_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER17_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER17_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER17_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER18_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER18_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER18_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER19_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER19_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER19_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER20_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER20_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER20_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER21_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER21_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER21_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER22_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER22_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER22_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER23_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER23_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER23_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER24_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER24_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER24_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER25_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER25_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER25_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER26_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER26_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER26_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER27_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER27_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER27_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER28_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER28_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER28_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER29_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER29_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER29_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER30_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER30_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER30_PROT        PRV_U
-#define ESR_SHIRE_FAST_LOCAL_BARRIER31_BYTE_OFFSET USER_CPU_FAST_LOCAL_BARRIER31_BYTE_OFFSET
-#define ESR_SHIRE_FAST_LOCAL_BARRIER31_PROT        PRV_U
-
-/* ---- thread and shire identifiers ---------------------------- */
+/* ---- thread identifiers ---------------------------- */
 /* (THIS_SHIRE already lives in <erbium/isa/hart.h> == 0.) */
 
 #define THREAD_0 0

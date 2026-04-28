@@ -17,18 +17,24 @@ extern "C" {
 #include <stdint.h>
 
 #include "erbium/isa/esr_defines.h"
+#include "hwinc/esr.h"   /* USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET */
 
 /* Number of Fast Local Barriers. Matches the CSR's 5-bit barrier
  * index in WAIT_FLB and the FAST_LOCAL_BARRIER0..31 ESRs. */
 #define FLB_COUNT 32
 
 /* Reset the given FLB to 0 by writing its memory-mapped ESR. */
-#define INIT_FLB(shire, barrier) \
-    (*((volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + (barrier)) = 0U)
+#define INIT_FLB(shire, barrier)                                               \
+    esr_write_u64(PRV_U, (shire), ESR_SR_USER_CPU,                             \
+                  USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET                     \
+                      + (barrier) * (uint32_t)sizeof(uint64_t),                \
+                  0U)
 
 /* Read the current FLB counter via its memory-mapped ESR. */
-#define READ_FLB(shire, barrier) \
-    (*((volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + (barrier)))
+#define READ_FLB(shire, barrier)                                               \
+    esr_read_u64(PRV_U, (shire), ESR_SR_USER_CPU,                              \
+                 USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET                      \
+                     + (barrier) * (uint32_t)sizeof(uint64_t))
 
 /* Join FLB `barrier`; atomically increment its counter and compare
  * against `threads`. Sets `result` to 1 on the last arriver (counter
@@ -57,14 +63,10 @@ uint64_t flbarrier(uint64_t barrier_num, uint64_t match)
 static inline __attribute__((always_inline))
 void flbarrier_set(uint32_t shire, uint32_t barrier_num, uint64_t value)
 {
-    /* On soc1sim ESR_SHIRE forces SHIRE_OWN and ignores `shire`; mark
-     * it used so -Wunused-parameter stays quiet on that backend. */
-    (void)shire;
-
-    volatile uint64_t *flb_addr =
-        (volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + barrier_num;
-
-    *flb_addr = value;
+    esr_write_u64(PRV_U, shire, ESR_SR_USER_CPU,
+                  USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET
+                      + barrier_num * (uint32_t)sizeof(uint64_t),
+                  value);
 }
 
 #ifdef __cplusplus
