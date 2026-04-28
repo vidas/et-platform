@@ -30,6 +30,7 @@ set(ERBIUM_UMODE_HDRS
     include/erbium/drivers/mprot.h
     include/erbium/drivers/plic.h
     include/erbium/drivers/thread.h
+    include/erbium/drivers/timer.h
     # Shared helpers
     include/common/mmio.h
 )
