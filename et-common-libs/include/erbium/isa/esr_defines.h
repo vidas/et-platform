@@ -73,9 +73,13 @@ extern "C" {
 #define ESR_REGION_SHIRE_SHIFT 24              /* shire id  [30:24] */
 
 /* Sub-region bases within the 22-bit offset field [21:0]. Pass one
- * of these as the `subregion` argument to esr_addr/read/write. */
-#define ESR_SR_USER_CPU        0x340000ULL     /* User_cpu block (FCC, FLB, ...) */
-#define ESR_SR_MACHINE_CPU     0xF40000ULL     /* Machine_cpu block (IPI, ...) */
+ * of these as the `subregion` argument to esr_addr/read/write; the
+ * PP argument selects User/Supervisor/Debug/Machine variant of the
+ * same block (e.g. User_cpu vs Machine_cpu both live at ESR_SR_CPU,
+ * differentiated by PP=PRV_U vs PRV_M). */
+#define ESR_SR_HART            0x000000ULL     /* Hart sub-region */
+#define ESR_SR_NEIGH           0x100000ULL     /* Neighborhood sub-region (MPROT, ...) */
+#define ESR_SR_CPU             0x340000ULL     /* CPU sub-region (FCC, FLB, IPI, ...) */
 
 /* Build an ESR address from (pp, shire, subregion, byte_offset).
  * Macro form so it's usable from assembler as well. */

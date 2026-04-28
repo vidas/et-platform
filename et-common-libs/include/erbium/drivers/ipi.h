@@ -23,21 +23,21 @@ extern "C" {
 static inline __attribute__((always_inline))
 uint64_t ipi_read_trigger(void)
 {
-    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_MACHINE_CPU,
+    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
                         MACHINE_CPU_IPI_TRIGGER_BYTE_OFFSET);
 }
 
 static inline __attribute__((always_inline))
 void ipi_write_trigger(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_MACHINE_CPU,
+    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
                   MACHINE_CPU_IPI_TRIGGER_BYTE_OFFSET, val);
 }
 
 static inline __attribute__((always_inline))
 void ipi_write_trigger_clear(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_MACHINE_CPU,
+    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
                   MACHINE_CPU_IPI_TRIGGER_CLEAR_BYTE_OFFSET, val);
 }
 

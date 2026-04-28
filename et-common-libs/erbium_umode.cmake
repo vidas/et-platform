@@ -27,6 +27,7 @@ set(ERBIUM_UMODE_HDRS
     include/erbium/isa/utils.h
     # Erbium driver headers
     include/erbium/drivers/ipi.h
+    include/erbium/drivers/mprot.h
 )
 
 # Listing of public headers that expose services provided by

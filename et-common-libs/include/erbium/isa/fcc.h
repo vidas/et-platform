@@ -34,7 +34,7 @@ typedef enum { FCC_0 = 0, FCC_1 = 1 } fcc_t;
  *     CREDINC_3 -> thread 1, fcc 1
  */
 #define SEND_FCC(shire, thread, fcc, bitmask)                                  \
-    esr_write_u64(PRV_U, (shire), ESR_SR_USER_CPU,                             \
+    esr_write_u64(PRV_U, (shire), ESR_SR_CPU,                             \
                   USER_CPU_CREDINC0_BYTE_OFFSET                                \
                       + ((thread) * 2 + (fcc)) * (uint32_t)sizeof(uint64_t),   \
                   (bitmask))
@@ -85,7 +85,7 @@ static inline __attribute__((always_inline)) void init_fcc(fcc_t fcc)
 static inline __attribute__((always_inline)) void fcc_send(
     uint32_t shire, uint32_t thread, uint32_t fcc_reg, uint64_t hart_mask)
 {
-    esr_write_u64(PRV_U, shire, ESR_SR_USER_CPU,
+    esr_write_u64(PRV_U, shire, ESR_SR_CPU,
                   USER_CPU_CREDINC0_BYTE_OFFSET
                       + ((thread << 1) | fcc_reg) * (uint32_t)sizeof(uint64_t),
                   hart_mask);
