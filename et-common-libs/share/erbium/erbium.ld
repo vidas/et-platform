@@ -23,6 +23,10 @@ ENTRY(_boot)
  * link line, e.g. -Wl,--defsym=MBOOT_OFFSET=0x100.
  */
 
+/* TODO(halification): MRAM_BASE/MRAM_SIZE duplicate ERBIUM_TOP_MRAM_BASE
+ * and ERBIUM_TOP_MRAM_SIZE from hal/platform/erbium/include/hwinc/top.h.
+ * To pull from HAL, this script needs to be preprocessed through CPP
+ * (e.g. configure_file or `gcc -E -P -x c`) so the hwinc macros expand. */
 MRAM_BASE = 0x0040000000;
 MRAM_SIZE = 16M;
 

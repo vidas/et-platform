@@ -25,8 +25,6 @@
     TODO(real-hw): the CSR bit encoding below reuses the etsoc
     layout and programs the dst field to CACHEOP_DST_MEM. Once the
     real erbium cache-op encoding is finalised in the HAL, reconcile.
-
-    TODO: cb_drain FENCE
 */
 
 #ifndef _ERBIUM_ISA_CACHEOPS_H_
