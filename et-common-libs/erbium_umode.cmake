@@ -29,8 +29,10 @@ set(ERBIUM_UMODE_HDRS
     include/erbium/drivers/ipi.h
     include/erbium/drivers/mprot.h
     include/erbium/drivers/plic.h
+    include/erbium/drivers/shakti_uart.h
     include/erbium/drivers/thread.h
     include/erbium/drivers/timer.h
+    include/erbium/drivers/uart.h
     # Shared helpers
     include/common/mmio.h
 )
