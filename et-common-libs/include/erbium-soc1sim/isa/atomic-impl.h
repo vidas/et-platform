@@ -4,7 +4,6 @@
  *-----------------------------------------------------------------------*/
 /*
  * DON'T INCLUDE THIS FILE DIRECTLY — include <erbium/isa/atomic.h>.
- *
  */
 
 #define atomic_store_small_template(scope, type, cscope, size)                      \
