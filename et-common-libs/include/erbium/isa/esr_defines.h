@@ -43,6 +43,9 @@ extern "C" {
 #include <inttypes.h>
 #endif
 
+#include "hwinc/top.h"   /* ERBIUM_TOP_CPU_REGISTERS_BASE */
+#include "hwinc/esr.h"   /* USER_CPU_CREDINC*_BYTE_OFFSET */
+
 /* ---- privilege (PP) constants -------------------------------- */
 
 #ifndef PRV_U
@@ -79,7 +82,7 @@ extern "C" {
 
 /* ---- erbium ESR address composition -------------------------- */
 
-#define ESR_REGION             0x80000000ULL   /* ESR space marker bit [31] */
+#define ESR_REGION             ERBIUM_TOP_CPU_REGISTERS_BASE   /* ESR space marker bit [31] */
 
 #define ESR_REGION_PROT_SHIFT  22              /* PP        [23:22] */
 #define ESR_REGION_SHIRE_SHIFT 24              /* shire id  [30:24] */
@@ -115,16 +118,16 @@ extern "C" {
  * Same layout etsoc used — SEND_FCC's pointer arithmetic in fcc.h
  * works unchanged. */
 
-#define ESR_SHIRE_FCC_CREDINC_0_BYTE_OFFSET 0x0C0ULL
+#define ESR_SHIRE_FCC_CREDINC_0_BYTE_OFFSET USER_CPU_CREDINC0_BYTE_OFFSET
 #define ESR_SHIRE_FCC_CREDINC_0_PROT        PRV_U
 
-#define ESR_SHIRE_FCC_CREDINC_1_BYTE_OFFSET 0x0C8ULL
+#define ESR_SHIRE_FCC_CREDINC_1_BYTE_OFFSET USER_CPU_CREDINC1_BYTE_OFFSET
 #define ESR_SHIRE_FCC_CREDINC_1_PROT        PRV_U
 
-#define ESR_SHIRE_FCC_CREDINC_2_BYTE_OFFSET 0x0D0ULL
+#define ESR_SHIRE_FCC_CREDINC_2_BYTE_OFFSET USER_CPU_CREDINC2_BYTE_OFFSET
 #define ESR_SHIRE_FCC_CREDINC_2_PROT        PRV_U
 
-#define ESR_SHIRE_FCC_CREDINC_3_BYTE_OFFSET 0x0D8ULL
+#define ESR_SHIRE_FCC_CREDINC_3_BYTE_OFFSET USER_CPU_CREDINC3_BYTE_OFFSET
 #define ESR_SHIRE_FCC_CREDINC_3_PROT        PRV_U
 
 /* ---- Fast Local Barriers (FLBs) ------------------------------ */

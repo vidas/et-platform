@@ -46,6 +46,7 @@ target_include_directories(erbium-umode
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${ERBIUM_UMODE_INSTALL_PREFIX}/include>
 )
+target_link_libraries(erbium-umode INTERFACE erbium_hal::erbium_hal)
 
 # Publish the default linker script's installed path as a custom
 # target property so downstream code doesn't need to know the install

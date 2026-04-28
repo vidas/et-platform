@@ -12,6 +12,7 @@ option(BUILD_DOC "Build documentation" ON)
 
 # Find the required packages
 find_package(esperantoTrace REQUIRED)
+find_package(erbium_hal REQUIRED)
 
 include(GNUInstallDirs)
 
