@@ -71,6 +71,7 @@ target_include_directories(erbium-soc1sim
         $<BUILD_INTERFACE:${ERBIUM_SOC1SIM_UMODE_STAGED_INCLUDE}>
         $<INSTALL_INTERFACE:${ERBIUM_SOC1SIM_UMODE_INSTALL_PREFIX}/include>
 )
+target_link_libraries(erbium-soc1sim INTERFACE etsoc_hal::etsoc_hal)
 
 # Publish the default linker script's installed path the same way
 # erbium-umode does, so downstream can read ERBIUM_LINKER_SCRIPT off

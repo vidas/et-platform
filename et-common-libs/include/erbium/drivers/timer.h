@@ -23,42 +23,42 @@ extern "C" {
 static inline __attribute__((always_inline))
 uint64_t timer_read_mtime(void)
 {
-    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    return esr_read_u64(PRV_M, ESR_SR_CPU,
                         MACHINE_CPU_MTIME_BYTE_OFFSET);
 }
 
 static inline __attribute__((always_inline))
 void timer_write_mtime(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    esr_write_u64(PRV_M, ESR_SR_CPU,
                   MACHINE_CPU_MTIME_BYTE_OFFSET, val);
 }
 
 static inline __attribute__((always_inline))
 uint64_t timer_read_mtimecmp(void)
 {
-    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    return esr_read_u64(PRV_M, ESR_SR_CPU,
                         MACHINE_CPU_MTIME_CMP_BYTE_OFFSET);
 }
 
 static inline __attribute__((always_inline))
 void timer_write_mtimecmp(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    esr_write_u64(PRV_M, ESR_SR_CPU,
                   MACHINE_CPU_MTIME_CMP_BYTE_OFFSET, val);
 }
 
 static inline __attribute__((always_inline))
 uint64_t timer_read_mtime_local_target(void)
 {
-    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    return esr_read_u64(PRV_M, ESR_SR_CPU,
                         MACHINE_CPU_MTIME_LOCAL_TARGET_BYTE_OFFSET);
 }
 
 static inline __attribute__((always_inline))
 void timer_write_mtime_local_target(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    esr_write_u64(PRV_M, ESR_SR_CPU,
                   MACHINE_CPU_MTIME_LOCAL_TARGET_BYTE_OFFSET, val);
 }
 

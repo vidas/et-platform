@@ -31,13 +31,13 @@ extern "C" {
 static inline __attribute__((always_inline))
 uint64_t mprot_read(void)
 {
-    return esr_read_u64(PRV_M, THIS_SHIRE, ESR_SR_NEIGH, MPROT_BYTE_OFFSET);
+    return esr_read_u64(PRV_M, ESR_SR_NEIGH, MPROT_BYTE_OFFSET);
 }
 
 static inline __attribute__((always_inline))
 void mprot_write(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_NEIGH, MPROT_BYTE_OFFSET, val);
+    esr_write_u64(PRV_M, ESR_SR_NEIGH, MPROT_BYTE_OFFSET, val);
 }
 
 #ifdef __cplusplus

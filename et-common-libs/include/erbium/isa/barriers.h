@@ -42,8 +42,8 @@ uint64_t shire_barrier(uint64_t flb, uint64_t fcc,
 
     if (last)
     {
-        fcc_send(THIS_SHIRE, THREAD_0, (uint32_t)fcc, minion_mask_t0);
-        fcc_send(THIS_SHIRE, THREAD_1, (uint32_t)fcc, minion_mask_t1);
+        fcc_send(THREAD_0, (uint32_t)fcc, minion_mask_t0);
+        fcc_send(THREAD_1, (uint32_t)fcc, minion_mask_t1);
     }
     fcc_consume(fcc);
 

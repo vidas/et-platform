@@ -3,12 +3,11 @@
 * SPDX-License-Identifier: Apache-2.0
 *-------------------------------------------------------------------------*/
 
-/* Fast Local Barrier (FLB) services for erbium.
- *
- */
+/* Fast Local Barrier (FLB) services for the erbium-soc1sim backend.
+ * Public API matches the native-erbium side exactly. */
 
-#ifndef _ERBIUM_ISA_FLB_H_
-#define _ERBIUM_ISA_FLB_H_
+#ifndef _ERBIUM_SOC1SIM_ISA_FLB_H_
+#define _ERBIUM_SOC1SIM_ISA_FLB_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,18 +16,24 @@ extern "C" {
 #include <stdint.h>
 
 #include "erbium/isa/esr_defines.h"
+#include "hwinc/etsoc_shire_other_esr.h"   /* ETSOC_SHIRE_OTHER_ESR_FAST_LOCAL_BARRIER0_BYTE_ADDRESS */
 
 /* Number of Fast Local Barriers. Matches the CSR's 5-bit barrier
  * index in WAIT_FLB and the FAST_LOCAL_BARRIER0..31 ESRs. */
 #define FLB_COUNT 32
 
 /* Reset the given FLB to 0 by writing its memory-mapped ESR. */
-#define INIT_FLB(shire, barrier) \
-    (*((volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + (barrier)) = 0U)
+#define INIT_FLB(barrier)                                                          \
+    esr_write_u64(PRV_U, ESR_SR_CPU,                                               \
+                  ETSOC_SHIRE_OTHER_ESR_FAST_LOCAL_BARRIER0_BYTE_ADDRESS           \
+                      + (barrier) * (uint32_t)sizeof(uint64_t),                    \
+                  0U)
 
 /* Read the current FLB counter via its memory-mapped ESR. */
-#define READ_FLB(shire, barrier) \
-    (*((volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + (barrier)))
+#define READ_FLB(barrier)                                                          \
+    esr_read_u64(PRV_U, ESR_SR_CPU,                                                \
+                 ETSOC_SHIRE_OTHER_ESR_FAST_LOCAL_BARRIER0_BYTE_ADDRESS            \
+                     + (barrier) * (uint32_t)sizeof(uint64_t))
 
 /* Join FLB `barrier`; atomically increment its counter and compare
  * against `threads`. Sets `result` to 1 on the last arriver (counter
@@ -55,20 +60,16 @@ uint64_t flbarrier(uint64_t barrier_num, uint64_t match)
 
 /* Write a raw value into the FLB's memory-mapped ESR. */
 static inline __attribute__((always_inline))
-void flbarrier_set(uint32_t shire, uint32_t barrier_num, uint64_t value)
+void flbarrier_set(uint32_t barrier_num, uint64_t value)
 {
-    /* On soc1sim ESR_SHIRE forces SHIRE_OWN and ignores `shire`; mark
-     * it used so -Wunused-parameter stays quiet on that backend. */
-    (void)shire;
-
-    volatile uint64_t *flb_addr =
-        (volatile uint64_t *)ESR_SHIRE(shire, FAST_LOCAL_BARRIER0) + barrier_num;
-
-    *flb_addr = value;
+    esr_write_u64(PRV_U, ESR_SR_CPU,
+                  ETSOC_SHIRE_OTHER_ESR_FAST_LOCAL_BARRIER0_BYTE_ADDRESS
+                      + barrier_num * (uint32_t)sizeof(uint64_t),
+                  value);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _ERBIUM_ISA_FLB_H_ */
+#endif /* _ERBIUM_SOC1SIM_ISA_FLB_H_ */

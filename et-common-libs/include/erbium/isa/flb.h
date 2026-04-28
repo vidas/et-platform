@@ -24,15 +24,15 @@ extern "C" {
 #define FLB_COUNT 32
 
 /* Reset the given FLB to 0 by writing its memory-mapped ESR. */
-#define INIT_FLB(shire, barrier)                                               \
-    esr_write_u64(PRV_U, (shire), ESR_SR_CPU,                             \
+#define INIT_FLB(barrier)                                                      \
+    esr_write_u64(PRV_U, ESR_SR_CPU,                                           \
                   USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET                     \
                       + (barrier) * (uint32_t)sizeof(uint64_t),                \
                   0U)
 
 /* Read the current FLB counter via its memory-mapped ESR. */
-#define READ_FLB(shire, barrier)                                               \
-    esr_read_u64(PRV_U, (shire), ESR_SR_CPU,                              \
+#define READ_FLB(barrier)                                                      \
+    esr_read_u64(PRV_U, ESR_SR_CPU,                                            \
                  USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET                      \
                      + (barrier) * (uint32_t)sizeof(uint64_t))
 
@@ -61,9 +61,9 @@ uint64_t flbarrier(uint64_t barrier_num, uint64_t match)
 
 /* Write a raw value into the FLB's memory-mapped ESR. */
 static inline __attribute__((always_inline))
-void flbarrier_set(uint32_t shire, uint32_t barrier_num, uint64_t value)
+void flbarrier_set(uint32_t barrier_num, uint64_t value)
 {
-    esr_write_u64(PRV_U, shire, ESR_SR_CPU,
+    esr_write_u64(PRV_U, ESR_SR_CPU,
                   USER_CPU_FAST_LOCAL_BARRIER0_BYTE_OFFSET
                       + barrier_num * (uint32_t)sizeof(uint64_t),
                   value);

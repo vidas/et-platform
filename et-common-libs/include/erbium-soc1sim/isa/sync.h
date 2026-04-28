@@ -104,8 +104,8 @@ static inline bool local_fcc_barrier(
     {
         while (atomic_load_local_32(&barrier->out) != thread_count - 1)
         {
-            SEND_FCC(THIS_SHIRE, THREAD_0, FCC_0, minion_mask);
-            SEND_FCC(THIS_SHIRE, THREAD_1, FCC_0, minion_mask);
+            SEND_FCC(THREAD_0, FCC_0, minion_mask);
+            SEND_FCC(THREAD_1, FCC_0, minion_mask);
             FENCE;
         }
         atomic_add_local_32(&barrier->out, 1);
@@ -158,7 +158,7 @@ static inline void local_fcc_flag_notify(
 
     do
     {
-        SEND_FCC(THIS_SHIRE, thread, FCC_0, 1U << minion);
+        SEND_FCC(thread, FCC_0, 1U << minion);
         FENCE;
     } while (atomic_load_local_32(&flag->flag) != 0);
 }
@@ -173,7 +173,7 @@ static inline void local_fcc_flag_notify_no_ack(
     atomic_store_local_32(&flag->flag, 1);
     FENCE;
 
-    SEND_FCC(THIS_SHIRE, thread, FCC_0, 1U << minion);
+    SEND_FCC(thread, FCC_0, 1U << minion);
 }
 
 /*! \fn static inline void global_fcc_init(global_fcc_flag_t *flag)
@@ -214,7 +214,7 @@ static inline void global_fcc_notify(
 
     do
     {
-        SEND_FCC(THIS_SHIRE, thread, fcc_id, 1U << minion);
+        SEND_FCC(thread, fcc_id, 1U << minion);
         FENCE;
     } while (atomic_load_global_32(&flag->flag) != 0);
 }
@@ -248,7 +248,7 @@ static inline void global_fcc_flag_notify(global_fcc_flag_t *flag, uint32_t mini
 
     do
     {
-        SEND_FCC(THIS_SHIRE, thread, FCC_0, 1U << minion);
+        SEND_FCC(thread, FCC_0, 1U << minion);
         FENCE;
     } while (atomic_load_global_32(&flag->flag) != 0);
 }

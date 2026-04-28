@@ -81,34 +81,33 @@ extern "C" {
 #define ESR_SR_NEIGH           0x100000ULL     /* Neighborhood sub-region (MPROT, ...) */
 #define ESR_SR_CPU             0x340000ULL     /* CPU sub-region (FCC, FLB, IPI, ...) */
 
-/* Build an ESR address from (pp, shire, subregion, byte_offset).
- * Macro form so it's usable from assembler as well. */
-#define ESR_ADDR(pp, shire, subregion, byte_offset)             \
-    ((ESR_REGION) |                                             \
-     ((uint64_t)((pp)    & 0x3ULL)  << ESR_REGION_PROT_SHIFT) | \
-     ((uint64_t)((shire) & 0x7FULL) << ESR_REGION_SHIRE_SHIFT) |\
-     ((uint64_t)((subregion) & 0x3FFFFFULL)) |                  \
+/* Build an ESR address from (pp, subregion, byte_offset). Targets
+ * the caller's own shire (THIS_SHIRE = 0 — erbium has exactly one
+ * shire). Macro form so it's usable from assembler. */
+#define ESR_ADDR(pp, subregion, byte_offset)                     \
+    ((ESR_REGION) |                                              \
+     ((uint64_t)((pp)    & 0x3ULL)  << ESR_REGION_PROT_SHIFT) |  \
+     ((uint64_t)((subregion) & 0x3FFFFFULL)) |                   \
      ((uint64_t)((byte_offset) & 0xFFFFULL)))
 
 #ifndef __ASSEMBLER__
 
 static inline __attribute__((always_inline))
-uint64_t esr_addr(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset)
+uint64_t esr_addr(uint32_t pp, uint32_t subregion, uint32_t offset)
 {
-    return ESR_ADDR(pp, shire, subregion, offset);
+    return ESR_ADDR(pp, subregion, offset);
 }
 
 static inline __attribute__((always_inline))
-uint64_t esr_read_u64(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset)
+uint64_t esr_read_u64(uint32_t pp, uint32_t subregion, uint32_t offset)
 {
-    return *(volatile uint64_t *)esr_addr(pp, shire, subregion, offset);
+    return *(volatile uint64_t *)esr_addr(pp, subregion, offset);
 }
 
 static inline __attribute__((always_inline))
-void esr_write_u64(uint32_t pp, uint32_t shire, uint32_t subregion, uint32_t offset,
-                   uint64_t val)
+void esr_write_u64(uint32_t pp, uint32_t subregion, uint32_t offset, uint64_t val)
 {
-    *(volatile uint64_t *)esr_addr(pp, shire, subregion, offset) = val;
+    *(volatile uint64_t *)esr_addr(pp, subregion, offset) = val;
 }
 
 #endif /* !__ASSEMBLER__ */

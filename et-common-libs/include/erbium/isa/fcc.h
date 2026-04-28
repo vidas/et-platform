@@ -22,9 +22,9 @@ extern "C" {
 /* FCC counters available per hart. */
 typedef enum { FCC_0 = 0, FCC_1 = 1 } fcc_t;
 
-/* \def SEND_FCC(shire, thread, fcc, bitmask)
- * Write a credit to (shire, thread, fcc) for each minion selected in
- * `bitmask`. `shire` must be THIS_SHIRE (== 0) on native erbium.
+/* \def SEND_FCC(thread, fcc, bitmask)
+ * Write a credit to (thread, fcc) for each minion selected in `bitmask`.
+ * Targets the caller's own shire (THIS_SHIRE).
  *
  * The four CREDINC registers are laid out as a contiguous array of
  * uint64_t in the User_cpu ESR block:
@@ -33,8 +33,8 @@ typedef enum { FCC_0 = 0, FCC_1 = 1 } fcc_t;
  *     CREDINC_2 -> thread 1, fcc 0
  *     CREDINC_3 -> thread 1, fcc 1
  */
-#define SEND_FCC(shire, thread, fcc, bitmask)                                  \
-    esr_write_u64(PRV_U, (shire), ESR_SR_CPU,                             \
+#define SEND_FCC(thread, fcc, bitmask)                                         \
+    esr_write_u64(PRV_U, ESR_SR_CPU,                                           \
                   USER_CPU_CREDINC0_BYTE_OFFSET                                \
                       + ((thread) * 2 + (fcc)) * (uint32_t)sizeof(uint64_t),   \
                   (bitmask))
@@ -83,9 +83,9 @@ static inline __attribute__((always_inline)) void init_fcc(fcc_t fcc)
 /* Function-form SEND_FCC (same write as the macro, expressed so the
  * compiler type-checks the arguments). */
 static inline __attribute__((always_inline)) void fcc_send(
-    uint32_t shire, uint32_t thread, uint32_t fcc_reg, uint64_t hart_mask)
+    uint32_t thread, uint32_t fcc_reg, uint64_t hart_mask)
 {
-    esr_write_u64(PRV_U, shire, ESR_SR_CPU,
+    esr_write_u64(PRV_U, ESR_SR_CPU,
                   USER_CPU_CREDINC0_BYTE_OFFSET
                       + ((thread << 1) | fcc_reg) * (uint32_t)sizeof(uint64_t),
                   hart_mask);

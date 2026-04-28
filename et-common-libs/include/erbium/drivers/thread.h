@@ -24,14 +24,14 @@ extern "C" {
 static inline __attribute__((always_inline))
 void thread_write_thread0_disable(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    esr_write_u64(PRV_M, ESR_SR_CPU,
                   MACHINE_CPU_THREAD0_DISABLE_BYTE_OFFSET, val);
 }
 
 static inline __attribute__((always_inline))
 void thread_write_thread1_disable(uint64_t val)
 {
-    esr_write_u64(PRV_M, THIS_SHIRE, ESR_SR_CPU,
+    esr_write_u64(PRV_M, ESR_SR_CPU,
                   MACHINE_CPU_THREAD1_DISABLE_BYTE_OFFSET, val);
 }
 
