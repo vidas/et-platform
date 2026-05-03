@@ -53,6 +53,24 @@ RuntimeImp::~RuntimeImp() {
     setMemoryManagerDebugMode(d, false);
   }
   running_ = false;
+
+  // Stop and join all worker threads BEFORE implicit member destruction
+  // frees state they touch (notably eventManager_).  Reverse declaration
+  // order would otherwise destroy eventManager_ while threadPools_,
+  // errorHandlingThreadPools_, and responseReceiver_ are still running
+  // callbacks that call EventManager::getNextId / dispatch.
+  //
+  // Order matters:
+  //   1. ResponseReceiver: stops the source of new responses, so no
+  //      new work lands in errorHandlingThreadPools_ while we drain.
+  //   2. errorHandlingThreadPools_: its workers post follow-up tasks
+  //      (memcpys for error info) onto threadPools_, so it must drain
+  //      first or threadPools_.at() will throw out_of_range.
+  //   3. threadPools_: drained last so any tail of work submitted by
+  //      step 2 still finds the map populated.
+  responseReceiver_.reset();
+  errorHandlingThreadPools_.clear();
+  threadPools_.clear();
 }
 
 DmaInfo RuntimeImp::doGetDmaInfo(DeviceId deviceId) const {
